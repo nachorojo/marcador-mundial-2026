@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marcador · Mundial 2026</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+
+.mw-wrap{container-type:inline-size;container-name:mw;width:100%;}
+
+.marcador{
+  background:#0e0e0e;border-radius:10px;overflow:hidden;
+  display:flex;align-items:stretch;width:100%;
+}
+
+/* ── LOGO ── */
+.col-logo{
+  background:#181818;border-right:1px solid #272727;
+  display:flex;align-items:center;justify-content:center;
+  padding:10px 12px;width:70px;flex-shrink:0;
+}
+.col-logo img{width:44px;height:44px;object-fit:contain;display:block;}
+
+/* ── COLUMNA CENTRAL ── */
+.col-main{flex:1;display:flex;flex-direction:column;min-width:0;}
+
+/* ── BARRA INFO ── */
+.info-bar{
+  display:flex;align-items:center;padding:0 14px;gap:8px;
+  border-bottom:1px solid #1e1e1e;min-height:28px;
+}
+.info-fase{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.9px;color:#bbb;white-space:nowrap;
+  text-decoration:none;flex-shrink:0;
+}
+.info-fase:hover{color:#fff;}
+a.info-fase{cursor:pointer;}
+.info-sep-bar{
+  font-size:9px;color:#444;flex-shrink:0;
+}
+.info-estadio{
+  font-size:10px;color:#777;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  flex:1;min-width:0;
+}
+.info-estado{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  gap:6px;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.5px;color:#e5e7eb;
+  padding:0 10px;
+}
+.info-cal{
+  flex-shrink:0;display:flex;align-items:center;
+  padding:0;
+}
+.info-cal a{
+  color:#aaa;font-size:10px;font-weight:700;text-decoration:none;
+  text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;
+  opacity:.7;transition:opacity .2s;display:flex;align-items:center;gap:4px;
+  padding:8px 0 8px 8px;
+}
+.info-cal a:hover{opacity:1;color:#fff;}
+
+/* ── PANEL BLANCO ── */
+.panel{
+  flex:1;background:#fff;margin:8px 12px;border-radius:7px;
+  display:flex;align-items:center;padding:10px 16px;gap:14px;
+  position:relative;overflow:hidden;
+}
+.panel.is-live::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#1d4ed8,#3b82f6,#1d4ed8);
+  background-size:200% 100%;animation:linea 2s linear infinite;
+}
+@keyframes linea{0%{background-position:0% 0%;}100%{background-position:200% 0%;}}
+
+/* ── EQUIPOS ── */
+.equipo{flex:1;display:flex;align-items:center;gap:10px;min-width:0;}
+.equipo.visit{flex-direction:row-reverse;text-align:right;}
+.flag-wrap{
+  width:40px;height:40px;border-radius:50%;overflow:hidden;
+  flex-shrink:0;box-shadow:0 1px 5px rgba(0,0,0,.22);background:#e5e7eb;
+}
+.flag-wrap img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;}
+.eq-info{min-width:0;}
+.eq-nombre{
+  font-size:16px;font-weight:800;color:#0e0e0e;text-transform:uppercase;
+  letter-spacing:.2px;line-height:1.1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  text-decoration:none;display:block;
+}
+.eq-nombre:hover{color:#1d4ed8;}
+.eq-goles{
+  font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
+
+/* ── MARCADOR CENTRAL ── */
+.score-wrap{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.score-nums{display:flex;align-items:center;gap:7px;}
+.score-box{
+  width:48px;height:48px;border:2px solid #1a1a1a;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;font-weight:900;color:#0e0e0e;line-height:1;
+}
+.score-dash{font-size:24px;font-weight:300;color:#9ca3af;}
+.hora-grande{font-size:26px;font-weight:700;color:#0e0e0e;padding:0 10px;letter-spacing:.5px;}
+.minuto-live{font-size:10px;font-weight:700;color:#2563eb;letter-spacing:.3px;}
+.pen-bloque{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.pen-label{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#9ca3af;}
+.pen-linea{width:36px;height:2px;background:#d1d5db;border-radius:1px;}
+.pen-score{font-size:12px;font-weight:700;color:#374151;}
+
+/* ── DOTS ── */
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.dot-live{background:#22c55e;animation:blink 1.5s ease-in-out infinite;}
+.dot-fin{background:#ef4444;}
+.dot-prox{background:#6b7280;}
+.dot-pen{background:#f97316;animation:blink 1.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.2;transform:scale(.6);}}
+
+/* ── ERROR ── */
+.error-msg{color:#fff;font-size:12px;padding:20px;text-align:center;opacity:.6;font-style:italic;}
+
+/* ══ CONTAINER QUERIES ══ */
+@container mw (max-width: 660px){
+  .col-logo{width:56px;padding:8px 10px;}
+  .col-logo img{width:34px;height:34px;}
+  .flag-wrap{width:33px;height:33px;}
+  .eq-nombre{font-size:13px;}
+  .score-box{width:40px;height:40px;font-size:26px;}
+  .score-dash{font-size:20px;}
+  .panel{padding:8px 12px;gap:10px;margin:7px 10px;}
+  .info-estadio{display:none;}
+  .info-sep-bar{display:none;}
+}
+@container mw (max-width: 480px){
+  .col-logo{display:none;}
+  .eq-goles{display:none;}
+  .eq-nombre{font-size:12px;}
+  .flag-wrap{width:28px;height:28px;}
+  .score-box{width:34px;height:34px;font-size:21px;border-width:1.5px;}
+  .score-dash{font-size:17px;}
+  .panel{padding:7px 10px;gap:8px;margin:6px 8px;}
+  .info-bar{padding:0 8px;gap:5px;}
+  .info-fase{font-size:9px;}
+  .info-cal a{font-size:9px;}
+}
+@container mw (max-width: 340px){
+  .info-cal{display:none;}
+  .eq-nombre{font-size:11px;}
+  .score-box{width:28px;height:28px;font-size:17px;}
+  .info-fase{display:none;}
+  .flag-wrap{width:22px;height:22px;}
+}
+</style>
+</head>
+<body>
+
+<!--
+  ═══════════════════════════════════════════════════════════════════════════
+  MARCADOR MUNDIAL 2026 · v5b
+  ═══════════════════════════════════════════════════════════════════════════
+
+  MODO DE USO: archivo alojado en un servidor (ej. atreslab.com).
+  El CMS lo embebe como <iframe src="...marcador_v5b.html?id=...&numero=...">
+  Los redactores solo cambian los parámetros de la URL del iframe.
+
+  ✅ Equipos, banderas, grupo, estadio y hora → AUTOMÁTICOS (datos embebidos)
+  ✅ Enlace a artículo de cada selección → AUTOMÁTICO
+  ✅ Enlace al artículo del grupo → AUTOMÁTICO
+  ✅ Marcador en directo → AUTOMÁTICO vía API football-data.org
+     · Se refresca solo cada 60 segundos mientras el partido está en juego
+     · Si la API falla, se muestran los datos manuales sin error visible
+  ✅ Los parámetros manuales siguen funcionando como override de la API
+
+  PARÁMETROS DE URL (usar en el src del iframe):
+
+  Obligatorios:
+    id=2026-06-15       → fecha en formato YYYY-MM-DD
+    numero=3            → nº de partido del día, empezando en 1
+
+  Opcionales (sobreescriben datos automáticos):
+    estado=finalizado   → programado | primera-parte | segunda-parte |
+                          prorroga-primera | prorroga-segunda | penaltis | finalizado
+    gL=3                → goles local
+    gV=0                → goles visitante
+    pL=4 & pV=5         → penaltis (ambos necesarios para mostrar la sección)
+    golL=Yamal+23%27    → goleadores local (URL-encoded)
+    golV=Muller+12%27   → goleadores visitante (URL-encoded)
+    estadio=MetLife+Stadium+%C2%B7+NJ  → estadio (URL-encoded)
+    minuto=34%27        → minuto en juego (solo estados en vivo)
+
+  EJEMPLOS:
+    ?id=2026-06-15&numero=3
+      → España vs Cabo Verde, Grupo H, Programado, 18:00
+
+    ?id=2026-06-15&numero=3&gL=3&gV=0&estado=finalizado&golL=Yamal+23%27%2C+Morata+67%27
+      → España 3-0 Cabo Verde, Grupo H, Finalizado, con goleadores
+
+    ?id=2026-06-15&numero=3&gL=1&gV=1&estado=primera-parte&minuto=34%27
+      → España 1-1 Cabo Verde, 1ª Parte · 34', línea azul animada
+
+    ?id=2026-06-15&numero=3&gL=1&gV=1&pL=4&pV=5&estado=finalizado
+      → España 1-1 (4-5 en pen.), Grupo H, Finalizado
+  ═══════════════════════════════════════════════════════════════════════════
+-->
+
+
+<div class="mw-wrap">
+  <div class="marcador" id="marcador">
+
+    <div class="col-logo">
+      <img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026--white.10e0b37b.png"
+           alt="FIFA World Cup 2026">
+    </div>
+
+    <div class="col-main">
+      <div class="info-bar" id="info-bar">
+        <!-- relleno por JS -->
+      </div>
+      <div class="panel" id="panel">
+        <div class="equipo local">
+          <div class="flag-wrap"><img id="flag-local" src="" alt=""></div>
+          <div class="eq-info">
+            <a class="eq-nombre" id="nombre-local" href="#" target="_top"></a>
+            <div class="eq-goles" id="goles-local"></div>
+          </div>
+        </div>
+        <div class="score-wrap" id="score-wrap"></div>
+        <div class="equipo visit">
+          <div class="flag-wrap"><img id="flag-visit" src="" alt=""></div>
+          <div class="eq-info" style="text-align:right">
+            <a class="eq-nombre" id="nombre-visit" href="#" target="_top"></a>
+            <div class="eq-goles" id="goles-visit"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════════
+   DATOS
+══════════════════════════════════════════════════════════════════════════ */
+
+// URL del calendario oficial en ondacero.es
+var URL_CALENDARIO = 'https://www.ondacero.es/deportes/futbol/mundial-futbol/calendario/';
+
+// Grupos: letra → URL artículo ondacero.es
+var GRUPOS = {
+  A: { url:'https://www.ondacero.es/deportes/futbol/mundial-futbol/asi-queda-grupo-mundial-2026-mexico-corea-sur-grandes-favoritas_202605266a15cd083ce3f96345d90265.html' },
+  B: { url:'https://www.ondacero.es/deportes/futbol/mundial-futbol/asi-queda-grupo-mundial-2026-canada-quiere-redimirse-suiza-busca-hacer-historia_202605266a15cd3c3ce3f96345d902d0.html' },
+  C: { url:'https://www.ondacero.es/deportes/futbol/mundial-futbol/asi-queda-grupo-mundial-2026-brasil-marruecos-dos-favoritas-pasar-ronda_202605266a15cd79339dd32ea997412c.html' },
+  D: { url:'https://www.ondacero.es/deportes/futbol/mundial-futbol/asi-queda-grupo-mundial-2026-turquia-paraguay-vuelven-mundial-mas-decada-despues_202605266a15cdac339dd32ea99741d9.html' },
+  E: { url:'https://www.ondacero.es/deportes/futbol/mundial-futbol/asi-queda-grupo-mundial-2026-alemania-vuelve-hambre_202605266a15cde63ce3f96345d90435.html' },
+  F: { url:'https://www.ondacero.es/deportes/futbol/mundial-futbol/asi-queda-grupo-mundial-2026-paises-bajos-suena-ser-campeona-vez_202605266a15ce1a3ce3f96345d90471.html' },
+  G: { url:'https://www.ondacero.es/deportes/futbol/mundial-futbol/asi-queda-grupo-mundial-2026-despedida-mohamed-salah_202605266a15ce48339dd32ea997429f.html' },
+  H: { url:'https://www.ondacero.es/deportes/futbol/mundial-futbol/asi-queda-grupo-mundial-2026-espana-uruguay-dos-campeonas-mundo-que-quieren-sonar-grande_202605266a15ce767e0b46320799aa0d.html' },
+  I: { url:'https://www.ondacero.es/deportes/futbol/mundial-futbol/asi-queda-grupo-mundial-2026-revancha-francia-mbappe_202605266a15ceac3ce3f96345d9059f.html' },
+  J: { url:'https://www.ondacero.es/deportes/futbol/mundial-futbol/asi-queda-grupo-mundial-2026-ultimo-baile-lionel-messi_202605266a15cee77e0b46320799aaaa.html' },
+  K: { url:'https://www.ondacero.es/deportes/futbol/mundial-futbol/asi-queda-grupo-mundial-2026-ultima-oportunidad-cristiano-portugal_202605266a15cf157e0b46320799ab01.html' },
+  L: { url:'https://www.ondacero.es/deportes/futbol/mundial-futbol/asi-queda-grupo-mundial-2026-inglaterra-ilusiona-segunda-copa-mundo-60-anos-despues_202605266a15cf457e0b46320799ab6d.html' },
+};
+
+// Estadios indexados por número de partido (1-104)
+// Fuente: calendario oficial FIFA / CSV Calendario (estadios).csv
+var ESTADIOS = [
+  '',                                           // 0 (sin usar)
+  'Estadio Azteca · Ciudad de México',          // 1  MEX-RSA
+  'Estadio Akron · Guadalajara',                // 2  KOR-CZE
+  'BMO Field · Toronto',                        // 3  CAN-BIH
+  'SoFi Stadium · Los Ángeles',                 // 4  USA-PAR
+  "Levi's Stadium · San Francisco",             // 5  QAT-SUI
+  'MetLife Stadium · Nueva Jersey',             // 6  BRA-MAR
+  'Gillette Stadium · Boston',                  // 7  HAI-SCO
+  'BC Place · Vancouver',                       // 8  AUS-TUR
+  'NRG Stadium · Houston',                      // 9  GER-CUR
+  'AT&T Stadium · Dallas',                      // 10 NED-JPN
+  'Lincoln Financial Field · Filadelfia',        // 11 CIV-ECU
+  'Estadio BBVA · Monterrey',                   // 12 SWE-TUN
+  'Mercedes-Benz Stadium · Atlanta',            // 13 ESP-CPV
+  'Lumen Field · Seattle',                      // 14 BEL-EGY
+  'Hard Rock Stadium · Miami',                  // 15 KSA-URU
+  'SoFi Stadium · Los Ángeles',                 // 16 IRN-NZL
+  'MetLife Stadium · Nueva Jersey',             // 17 FRA-SEN
+  'Gillette Stadium · Boston',                  // 18 IRQ-NOR
+  'Arrowhead Stadium · Kansas City',            // 19 ARG-DZA
+  "Levi's Stadium · San Francisco",             // 20 AUT-JOR
+  'NRG Stadium · Houston',                      // 21 POR-COD
+  'AT&T Stadium · Dallas',                      // 22 ENG-CRO
+  'BMO Field · Toronto',                        // 23 GHA-PAN
+  'Estadio Azteca · Ciudad de México',          // 24 UZB-COL
+  'Mercedes-Benz Stadium · Atlanta',            // 25 CZE-RSA
+  'SoFi Stadium · Los Ángeles',                 // 26 SUI-BIH
+  'BC Place · Vancouver',                       // 27 CAN-QAT
+  'Estadio Akron · Guadalajara',                // 28 MEX-KOR
+  'Lumen Field · Seattle',                      // 29 USA-AUS
+  'Gillette Stadium · Boston',                  // 30 SCO-MAR
+  'Lincoln Financial Field · Filadelfia',        // 31 BRA-HAI
+  "Levi's Stadium · San Francisco",             // 32 TUR-PAR
+  'NRG Stadium · Houston',                      // 33 NED-SWE
+  'BMO Field · Toronto',                        // 34 GER-CIV
+  'Arrowhead Stadium · Kansas City',            // 35 ECU-CUR
+  'Estadio BBVA · Monterrey',                   // 36 TUN-JPN
+  'Mercedes-Benz Stadium · Atlanta',            // 37 ESP-KSA
+  'SoFi Stadium · Los Ángeles',                 // 38 BEL-IRN
+  'Hard Rock Stadium · Miami',                  // 39 URU-CPV
+  'BC Place · Vancouver',                       // 40 NZL-EGY
+  'AT&T Stadium · Dallas',                      // 41 ARG-AUT
+  'Lincoln Financial Field · Filadelfia',        // 42 FRA-IRQ
+  'MetLife Stadium · Nueva Jersey',             // 43 NOR-SEN
+  "Levi's Stadium · San Francisco",             // 44 JOR-DZA
+  'NRG Stadium · Houston',                      // 45 POR-UZB
+  'Gillette Stadium · Boston',                  // 46 ENG-GHA
+  'BMO Field · Toronto',                        // 47 PAN-CRO
+  'Estadio Akron · Guadalajara',                // 48 COL-COD
+  'BC Place · Vancouver',                       // 49 SUI-CAN
+  'Lumen Field · Seattle',                      // 50 BIH-QAT
+  'Hard Rock Stadium · Miami',                  // 51 SCO-BRA
+  'Mercedes-Benz Stadium · Atlanta',            // 52 MAR-HAI
+  'Estadio Azteca · Ciudad de México',          // 53 CZE-MEX
+  'Estadio BBVA · Monterrey',                   // 54 RSA-KOR
+  'Lincoln Financial Field · Filadelfia',        // 55 CUR-CIV
+  'MetLife Stadium · Nueva Jersey',             // 56 ECU-GER
+  'AT&T Stadium · Dallas',                      // 57 JPN-SWE
+  'Arrowhead Stadium · Kansas City',            // 58 TUN-NED
+  'SoFi Stadium · Los Ángeles',                 // 59 TUR-USA
+  "Levi's Stadium · San Francisco",             // 60 PAR-AUS
+  'Gillette Stadium · Boston',                  // 61 NOR-FRA
+  'BMO Field · Toronto',                        // 62 SEN-IRQ
+  'NRG Stadium · Houston',                      // 63 CPV-KSA
+  'Estadio Akron · Guadalajara',                // 64 URU-ESP
+  'Lumen Field · Seattle',                      // 65 EGY-IRN
+  'BC Place · Vancouver',                       // 66 NZL-BEL
+  'MetLife Stadium · Nueva Jersey',             // 67 PAN-ENG
+  'Lincoln Financial Field · Filadelfia',        // 68 CRO-GHA
+  'Hard Rock Stadium · Miami',                  // 69 COL-POR
+  'Mercedes-Benz Stadium · Atlanta',            // 70 COD-UZB
+  'Arrowhead Stadium · Kansas City',            // 71 DZA-AUT
+  'AT&T Stadium · Dallas',                      // 72 JOR-ARG
+  'SoFi Stadium · Los Ángeles',                 // 73 D16: 2A-2B
+  'NRG Stadium · Houston',                      // 74 D16: 1C-2F
+  'Gillette Stadium · Boston',                  // 75 D16: 1E-3ABCDF
+  'Estadio BBVA · Monterrey',                   // 76 D16: 1F-2C
+  'AT&T Stadium · Dallas',                      // 77 D16: 2E-2I
+  'MetLife Stadium · Nueva Jersey',             // 78 D16: 1I-3CDFGH
+  'Estadio Azteca · Ciudad de México',          // 79 D16: 1A-3CEFHI
+  'Mercedes-Benz Stadium · Atlanta',            // 80 D16: 1L-3EHIJK
+  'Lumen Field · Seattle',                      // 81 D16: 1G-3AEHIJ
+  "Levi's Stadium · San Francisco",             // 82 D16: 1D-3BEFIJ
+  'SoFi Stadium · Los Ángeles',                 // 83 D16: 1H-2J
+  'BMO Field · Toronto',                        // 84 D16: 2K-2L
+  'BC Place · Vancouver',                       // 85 D16: 1B-3EFGIJ
+  'AT&T Stadium · Dallas',                      // 86 D16: 2D-2G
+  'Hard Rock Stadium · Miami',                  // 87 D16: 1J-2H
+  'Arrowhead Stadium · Kansas City',            // 88 D16: 1K-3DEIJL
+  'NRG Stadium · Houston',                      // 89 Oct: W73-W75
+  'Lincoln Financial Field · Filadelfia',        // 90 Oct: W74-W77
+  'MetLife Stadium · Nueva Jersey',             // 91 Oct: W76-W78
+  'Estadio Azteca · Ciudad de México',          // 92 Oct: W79-W80
+  'AT&T Stadium · Dallas',                      // 93 Oct: W83-W84
+  'Lumen Field · Seattle',                      // 94 Oct: W81-W82
+  'Mercedes-Benz Stadium · Atlanta',            // 95 Oct: W86-W88
+  'BC Place · Vancouver',                       // 96 Oct: W85-W87
+  'Gillette Stadium · Boston',                  // 97 Cto: W89-W90
+  'SoFi Stadium · Los Ángeles',                 // 98 Cto: W93-W94
+  'Hard Rock Stadium · Miami',                  // 99 Cto: W91-W92
+  'Arrowhead Stadium · Kansas City',            // 100 Cto: W95-W96
+  'AT&T Stadium · Dallas',                      // 101 SF: W97-W98
+  'Mercedes-Benz Stadium · Atlanta',            // 102 SF: W99-W100
+  'Hard Rock Stadium · Miami',                  // 103 3er: RU101-RU102
+  'MetLife Stadium · Nueva Jersey',             // 104 Final
+];
+
+// Países: código FIFA → { nombre, flag, grupo, url artículo ondacero }
+var PAISES = {
+  "MEX": { nombre:"México",          flag:"mx",     grupo:"A", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/mexico-suena-casa-romper-techo-historico-mundiales_202605216a0f1bb87e0b4632078f5fa2.html" },
+  "RSA": { nombre:"Sudáfrica",       flag:"za",     grupo:"A", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/sudafrica-vuelve-mundial-ambicion-pasar-primera-vez-fase-grupos_202605216a0f47ad7e0b4632078fae29.html" },
+  "KOR": { nombre:"Corea del Sur",   flag:"kr",     grupo:"A", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/corea-sur-aferra-liderazgo-son-volver-competir-grandes_202605216a0f4700339dd32ea98d4af4.html" },
+  "CZE": { nombre:"Chequia",         flag:"cz",     grupo:"A", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/republica-checa-vuelve-mundial-20-anos-despues-penaltis-escandalos_202605216a0f4747339dd32ea98d4b5f.html" },
+
+  "CAN": { nombre:"Canadá",          flag:"ca",     grupo:"B", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/canada-primera-vez-verdad-busca-sus-primeros-puntos-mundialistas_202605216a0f53f0339dd32ea98d6025.html" },
+  "BIH": { nombre:"Bosnia y Herz.",  flag:"ba",     grupo:"B", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/bosnia-que-mato-italia-vuelve-doce-anos-despues_202605216a0f54187e0b4632078fc151.html" },
+  "QAT": { nombre:"Catar",           flag:"qa",     grupo:"B", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/qatar-revancha-anfitrion-que-despidio-punto_202605216a0f47f2339dd32ea98d4c84.html" },
+  "SUI": { nombre:"Suiza",           flag:"ch",     grupo:"B", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/suiza-equipo-que-ningun-favorito-quiere-cruzarse_202605216a0f484a3ce3f96345cf1127.html" },
+
+  "BRA": { nombre:"Brasil",          flag:"br",     grupo:"C", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/brasil-eterna-espera-hexa-ancelotti-mando_202605216a0f48833ce3f96345cf1198.html" },
+  "MAR": { nombre:"Marruecos",       flag:"ma",     grupo:"C", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/marruecos-leones-atlas-que-son-sorpresa_202605216a0f49a93ce3f96345cf1324.html" },
+  "HAI": { nombre:"Haití",           flag:"ht",     grupo:"C", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/haiti-clasificacion-imposible-pais-que-juega-estadio_202605216a0f496e339dd32ea98d4ef2.html" },
+  "SCO": { nombre:"Escocia",         flag:"gb-sct", grupo:"C", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/escocia-28-anos-espera-chilena-historia_202605216a0f49427e0b4632078fb08b.html" },
+
+  "USA": { nombre:"EE.UU.",          flag:"us",     grupo:"D", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/estados-unidos-jugar-casa-pulisic-mando_202605216a0f49f37e0b4632078fb1b3.html" },
+  "PAR": { nombre:"Paraguay",        flag:"py",     grupo:"D", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/paraguay-16-anos-despues-garra-guarani-intacta_202605216a0f4a1a3ce3f96345cf13d4.html" },
+  "AUS": { nombre:"Australia",       flag:"au",     grupo:"D", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/australia-socceroos-leccion-aprendida-qatar_202605216a0f49cb3ce3f96345cf136f.html" },
+  "TUR": { nombre:"Turquía",         flag:"tr",     grupo:"D", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/turquia-24-anos-espera-arda-guler-saciar-hambre_202605216a0f4a557e0b4632078fb20c.html" },
+
+  "GER": { nombre:"Alemania",        flag:"de",     grupo:"E", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/alemania-vuelve-hambre-wirtz-musiala-mandan_202605216a0f4a7b3ce3f96345cf1449.html" },
+  "CUR": { nombre:"Curazao",         flag:"cw",     grupo:"E", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/curazao-150000-habitantes-sueno-gigantesco_202605216a0f4adc3ce3f96345cf1555.html" },
+  "CIV": { nombre:"Costa de Marfil", flag:"ci",     grupo:"E", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/costa-marfil-elefantes-que-tienen-excusas_202605216a0f4aa97e0b4632078fb28c.html" },
+  "ECU": { nombre:"Ecuador",         flag:"ec",     grupo:"E", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/ecuador-llega-sus-mejores-cartas-pero-pregunta-siempre_202605216a0f4b70339dd32ea98d527a.html" },
+
+  "NED": { nombre:"Países Bajos",    flag:"nl",     grupo:"F", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/paises-bajos-obsesion-naranja-titulo-que-siempre-escapa_202605216a0f4bdd7e0b4632078fb4c4.html" },
+  "JPN": { nombre:"Japón",           flag:"jp",     grupo:"F", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/japon-samurais-que-conforman-sobrevivir_202605216a0f4b9e3ce3f96345cf1678.html" },
+  "SWE": { nombre:"Suecia",          flag:"se",     grupo:"F", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/suecia-potter-salvo-gyokeres-puede-hacer-resto_202605216a0f4c147e0b4632078fb532.html" },
+  "TUN": { nombre:"Túnez",           flag:"tn",     grupo:"F", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/tunez-aguilas-cartago-muro-que-nunca-cae_202605216a0f4c523ce3f96345cf17cb.html" },
+
+  "BEL": { nombre:"Bélgica",         flag:"be",     grupo:"G", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/belgica-ultima-llamada-generacion-que-sabe-perder-tiempo_202605216a0f4c7d339dd32ea98d5434.html" },
+  "EGY": { nombre:"Egipto",          flag:"eg",     grupo:"G", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/egipto-salah-todo-ultimo-baile-mundialista_202605216a0f4ca37e0b4632078fb602.html" },
+  "IRN": { nombre:"Irán",            flag:"ir",     grupo:"G", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/iran-clasificados-campo-pero-incertidumbre-politica_202605216a0f4e233ce3f96345cf1a5d.html" },
+  "NZL": { nombre:"Nueva Zelanda",   flag:"nz",     grupo:"G", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/nueva-zelanda-all-whites-sombra-rugby_202605216a0f4e61339dd32ea98d5767.html" },
+
+  "ESP": { nombre:"España",          flag:"es",     grupo:"H", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/espana-segundo-mundial_202605216a0f4f0e3ce3f96345cf1bd0.html" },
+  "CPV": { nombre:"Cabo Verde",      flag:"cv",     grupo:"H", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/cabo-verde-tiburones-azules-que-llegaron-primera-vez_202605216a0f4ee93ce3f96345cf1b9f.html" },
+  "KSA": { nombre:"Arabia Saudí",    flag:"sa",     grupo:"H", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/arabia-saudita-millon-dolares-que-vale-ilusion_202605216a0f4eaa339dd32ea98d57fa.html" },
+  "URU": { nombre:"Uruguay",         flag:"uy",     grupo:"H", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/uruguay-celeste-bielsa-vista-largo-plazo_202605216a0f4f32339dd32ea98d589b.html" },
+
+  "FRA": { nombre:"Francia",         flag:"fr",     grupo:"I", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/francia-despedida-deschamps-revancha-mbappe_202605216a0f4f5b3ce3f96345cf1c41.html" },
+  "SEN": { nombre:"Senegal",         flag:"sn",     grupo:"I", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/senegal-leones-teranga-quieren-replicar-magia-2002_202605216a0f4ff43ce3f96345cf1d47.html" },
+  "IRQ": { nombre:"Irak",            flag:"iq",     grupo:"I", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/irak-40-anos-espera-ultimo-billete-mundial_202605216a0f4fa07e0b4632078fbaad.html" },
+  "NOR": { nombre:"Noruega",         flag:"no",     grupo:"I", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/noruega-28-anos-espera-gigante-llamado-haaland_202605216a0f4fcb3ce3f96345cf1d20.html" },
+
+  "ARG": { nombre:"Argentina",       flag:"ar",     grupo:"J", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/argentina-ultimo-baile-messi-defensa-corona_202605216a0f506d7e0b4632078fbbdd.html" },
+  "DZA": { nombre:"Argelia",         flag:"dz",     grupo:"J", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/argelia-regreso-mahrez-12-anos-ver-mundial_202605216a0f501d7e0b4632078fbb50.html" },
+  "AUT": { nombre:"Austria",         flag:"at",     grupo:"J", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/austria-vuelta-despues-28-anos-metodo-rangnick_202605216a0f50907e0b4632078fbc25.html" },
+  "JOR": { nombre:"Jordania",        flag:"jo",     grupo:"J", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/jordania-nashama-primer-mundial-historia_202605216a0f50c37e0b4632078fbc50.html" },
+
+  "POR": { nombre:"Portugal",        flag:"pt",     grupo:"K", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/portugal-ultima-oportunidad-cristiano-generacion-excusas_202605216a0f511e339dd32ea98d5b9f.html" },
+  "COD": { nombre:"RD Congo",        flag:"cd",     grupo:"K", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/congo-52-anos-espera-regreso-leopardos_202605216a0f514e339dd32ea98d5c00.html" },
+  "UZB": { nombre:"Uzbekistán",      flag:"uz",     grupo:"K", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/uzbekistan-debut-primer-pais-asia-central-mundial_202605216a0f517b7e0b4632078fbd43.html" },
+  "COL": { nombre:"Colombia",        flag:"co",     grupo:"K", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/colombia-regreso-tricolor-james-diaz-frente_202605216a0f50f37e0b4632078fbc83.html" },
+
+  "ENG": { nombre:"Inglaterra",      flag:"gb-eng", grupo:"L", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/inglaterra-60-anos-esperando-tuchel-volante_202605216a0f51f07e0b4632078fbe31.html" },
+  "CRO": { nombre:"Croacia",         flag:"hr",     grupo:"L", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/croacia-ultimo-baile-modri-generacion-historica_202605216a0f51a07e0b4632078fbd68.html" },
+  "GHA": { nombre:"Ghana",           flag:"gh",     grupo:"L", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/ghana-estrellas-negras-kudus-frente_202605216a0f51ca3ce3f96345cf1feb.html" },
+  "PAN": { nombre:"Panamá",          flag:"pa",     grupo:"L", url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/panama-segundo-mundial-canaleros_202605216a0f46a2339dd32ea98d4a96.html" },
+
+  // Otros (sin grupo asignado)
+  "ITA": { nombre:"Italia",          flag:"it",     grupo:"",  url:"#" },
+  "DEN": { nombre:"Dinamarca",       flag:"dk",     grupo:"",  url:"#" },
+  "NGA": { nombre:"Nigeria",         flag:"ng",     grupo:"",  url:"#" },
+  "CMR": { nombre:"Camerún",         flag:"cm",     grupo:"",  url:"#" },
+  "IRE": { nombre:"Irlanda",         flag:"ie",     grupo:"",  url:"#" },
+  "WAL": { nombre:"Gales",           flag:"gb-wls", grupo:"",  url:"#" },
+  "POL": { nombre:"Polonia",         flag:"pl",     grupo:"",  url:"#" },
+  "UAE": { nombre:"EAU",             flag:"ae",     grupo:"",  url:"#" },
+  "CRC": { nombre:"Costa Rica",      flag:"cr",     grupo:"",  url:"#" },
+  "JAM": { nombre:"Jamaica",         flag:"jm",     grupo:"",  url:"#" },
+};
+
+var CALENDARIO = [
+  { id:"2026-06-11", fecha:"Jueves 11 de junio",    fase:"Fase de grupos", encuentros:[
+    { local:"MEX", visitante:"RSA", hora:"21:00", marcador:"0-0", estado:"programado", n:1 }
+  ]},
+  { id:"2026-06-12", fecha:"Viernes 12 de junio",   fase:"Fase de grupos", encuentros:[
+    { local:"KOR", visitante:"CZE", hora:"04:00", marcador:"0-0", estado:"programado", n:2 },
+    { local:"CAN", visitante:"BIH", hora:"21:00", marcador:"0-0", estado:"cronica",    n:3 }
+  ]},
+  { id:"2026-06-13", fecha:"Sábado 13 de junio",    fase:"Fase de grupos", encuentros:[
+    { local:"USA", visitante:"PAR", hora:"03:00", marcador:"0-0", estado:"programado", n:4 },
+    { local:"QAT", visitante:"SUI", hora:"21:00", marcador:"0-0", estado:"programado", n:5 }
+  ]},
+  { id:"2026-06-14", fecha:"Domingo 14 de junio",   fase:"Fase de grupos", encuentros:[
+    { local:"BRA", visitante:"MAR", hora:"00:00", marcador:"0-0", estado:"programado", n:6  },
+    { local:"HAI", visitante:"SCO", hora:"03:00", marcador:"0-0", estado:"programado", n:7  },
+    { local:"AUS", visitante:"TUR", hora:"06:00", marcador:"0-0", estado:"programado", n:8  },
+    { local:"GER", visitante:"CUR", hora:"19:00", marcador:"0-0", estado:"programado", n:9  },
+    { local:"NED", visitante:"JPN", hora:"22:00", marcador:"0-0", estado:"programado", n:10 }
+  ]},
+  { id:"2026-06-15", fecha:"Lunes 15 de junio",     fase:"Fase de grupos", encuentros:[
+    { local:"CIV", visitante:"ECU", hora:"01:00", marcador:"0-0", estado:"programado", n:11 },
+    { local:"SWE", visitante:"TUN", hora:"04:00", marcador:"0-0", estado:"programado", n:12 },
+    { local:"ESP", visitante:"CPV", hora:"18:00", marcador:"0-0", estado:"programado", n:13 },
+    { local:"BEL", visitante:"EGY", hora:"21:00", marcador:"0-0", estado:"programado", n:14 }
+  ]},
+  { id:"2026-06-16", fecha:"Martes 16 de junio",    fase:"Fase de grupos", encuentros:[
+    { local:"KSA", visitante:"URU", hora:"00:00", marcador:"0-0", estado:"programado", n:15 },
+    { local:"IRN", visitante:"NZL", hora:"03:00", marcador:"0-0", estado:"programado", n:16 },
+    { local:"FRA", visitante:"SEN", hora:"21:00", marcador:"0-0", estado:"programado", n:17 }
+  ]},
+  { id:"2026-06-17", fecha:"Miércoles 17 de junio", fase:"Fase de grupos", encuentros:[
+    { local:"IRQ", visitante:"NOR", hora:"00:00", marcador:"0-0", estado:"programado", n:18 },
+    { local:"ARG", visitante:"DZA", hora:"03:00", marcador:"0-0", estado:"programado", n:19 },
+    { local:"AUT", visitante:"JOR", hora:"06:00", marcador:"0-0", estado:"programado", n:20 },
+    { local:"POR", visitante:"COD", hora:"19:00", marcador:"0-0", estado:"programado", n:21 },
+    { local:"ENG", visitante:"CRO", hora:"22:00", marcador:"0-0", estado:"programado", n:22 }
+  ]},
+  { id:"2026-06-18", fecha:"Jueves 18 de junio",    fase:"Fase de grupos", encuentros:[
+    { local:"GHA", visitante:"PAN", hora:"01:00", marcador:"0-0", estado:"programado", n:23 },
+    { local:"UZB", visitante:"COL", hora:"04:00", marcador:"0-0", estado:"programado", n:24 },
+    { local:"CZE", visitante:"RSA", hora:"18:00", marcador:"0-0", estado:"programado", n:25 },
+    { local:"SUI", visitante:"BIH", hora:"21:00", marcador:"0-0", estado:"programado", n:26 }
+  ]},
+  { id:"2026-06-19", fecha:"Viernes 19 de junio",   fase:"Fase de grupos", encuentros:[
+    { local:"CAN", visitante:"QAT", hora:"00:00", marcador:"0-0", estado:"programado", n:27 },
+    { local:"MEX", visitante:"KOR", hora:"03:00", marcador:"0-0", estado:"programado", n:28 },
+    { local:"USA", visitante:"AUS", hora:"21:00", marcador:"0-0", estado:"programado", n:29 }
+  ]},
+  { id:"2026-06-20", fecha:"Sábado 20 de junio",    fase:"Fase de grupos", encuentros:[
+    { local:"SCO", visitante:"MAR", hora:"00:00", marcador:"0-0", estado:"programado", n:30 },
+    { local:"BRA", visitante:"HAI", hora:"02:30", marcador:"0-0", estado:"programado", n:31 },
+    { local:"TUR", visitante:"PAR", hora:"05:00", marcador:"0-0", estado:"programado", n:32 },
+    { local:"NED", visitante:"SWE", hora:"19:00", marcador:"0-0", estado:"programado", n:33 },
+    { local:"GER", visitante:"CIV", hora:"22:00", marcador:"0-0", estado:"programado", n:34 }
+  ]},
+  { id:"2026-06-21", fecha:"Domingo 21 de junio",   fase:"Fase de grupos", encuentros:[
+    { local:"ECU", visitante:"CUR", hora:"02:00", marcador:"0-0", estado:"programado", n:35 },
+    { local:"TUN", visitante:"JPN", hora:"06:00", marcador:"0-0", estado:"programado", n:36 },
+    { local:"ESP", visitante:"KSA", hora:"18:00", marcador:"0-0", estado:"programado", n:37 },
+    { local:"BEL", visitante:"IRN", hora:"21:00", marcador:"0-0", estado:"programado", n:38 }
+  ]},
+  { id:"2026-06-22", fecha:"Lunes 22 de junio",     fase:"Fase de grupos", encuentros:[
+    { local:"URU", visitante:"CPV", hora:"00:00", marcador:"0-0", estado:"programado", n:39 },
+    { local:"NZL", visitante:"EGY", hora:"03:00", marcador:"0-0", estado:"programado", n:40 },
+    { local:"ARG", visitante:"AUT", hora:"19:00", marcador:"0-0", estado:"programado", n:41 },
+    { local:"FRA", visitante:"IRQ", hora:"23:00", marcador:"0-0", estado:"programado", n:42 }
+  ]},
+  { id:"2026-06-23", fecha:"Martes 23 de junio",    fase:"Fase de grupos", encuentros:[
+    { local:"NOR", visitante:"SEN", hora:"02:00", marcador:"0-0", estado:"programado", n:43 },
+    { local:"JOR", visitante:"DZA", hora:"05:00", marcador:"0-0", estado:"programado", n:44 },
+    { local:"POR", visitante:"UZB", hora:"19:00", marcador:"0-0", estado:"programado", n:45 },
+    { local:"ENG", visitante:"GHA", hora:"22:00", marcador:"0-0", estado:"programado", n:46 }
+  ]},
+  { id:"2026-06-24", fecha:"Miércoles 24 de junio", fase:"Fase de grupos", encuentros:[
+    { local:"PAN", visitante:"CRO", hora:"01:00", marcador:"0-0", estado:"programado", n:47 },
+    { local:"COL", visitante:"COD", hora:"04:00", marcador:"0-0", estado:"programado", n:48 },
+    { local:"SUI", visitante:"CAN", hora:"21:00", marcador:"0-0", estado:"programado", n:49 },
+    { local:"BIH", visitante:"QAT", hora:"21:00", marcador:"0-0", estado:"programado", n:50 }
+  ]},
+  { id:"2026-06-25", fecha:"Jueves 25 de junio",    fase:"Fase de grupos", encuentros:[
+    { local:"SCO", visitante:"BRA", hora:"00:00", marcador:"0-0", estado:"programado", n:51 },
+    { local:"MAR", visitante:"HAI", hora:"00:00", marcador:"0-0", estado:"programado", n:52 },
+    { local:"CZE", visitante:"MEX", hora:"03:00", marcador:"0-0", estado:"programado", n:53 },
+    { local:"RSA", visitante:"KOR", hora:"03:00", marcador:"0-0", estado:"programado", n:54 },
+    { local:"CUR", visitante:"CIV", hora:"22:00", marcador:"0-0", estado:"programado", n:55 },
+    { local:"ECU", visitante:"GER", hora:"22:00", marcador:"0-0", estado:"programado", n:56 }
+  ]},
+  { id:"2026-06-26", fecha:"Viernes 26 de junio",   fase:"Fase de grupos", encuentros:[
+    { local:"JPN", visitante:"SWE", hora:"01:00", marcador:"0-0", estado:"programado", n:57 },
+    { local:"TUN", visitante:"NED", hora:"01:00", marcador:"0-0", estado:"programado", n:58 },
+    { local:"TUR", visitante:"USA", hora:"04:00", marcador:"0-0", estado:"programado", n:59 },
+    { local:"PAR", visitante:"AUS", hora:"04:00", marcador:"0-0", estado:"programado", n:60 },
+    { local:"NOR", visitante:"FRA", hora:"21:00", marcador:"0-0", estado:"programado", n:61 },
+    { local:"SEN", visitante:"IRQ", hora:"21:00", marcador:"0-0", estado:"programado", n:62 }
+  ]},
+  { id:"2026-06-27", fecha:"Sábado 27 de junio",    fase:"Fase de grupos", encuentros:[
+    { local:"CPV", visitante:"KSA", hora:"02:00", marcador:"0-0", estado:"programado", n:63 },
+    { local:"URU", visitante:"ESP", hora:"02:00", marcador:"0-0", estado:"programado", n:64 },
+    { local:"EGY", visitante:"IRN", hora:"05:00", marcador:"0-0", estado:"programado", n:65 },
+    { local:"NZL", visitante:"BEL", hora:"05:00", marcador:"0-0", estado:"programado", n:66 },
+    { local:"PAN", visitante:"ENG", hora:"23:00", marcador:"0-0", estado:"programado", n:67 },
+    { local:"CRO", visitante:"GHA", hora:"23:00", marcador:"0-0", estado:"programado", n:68 }
+  ]},
+  { id:"2026-06-28", fecha:"Domingo 28 de junio",   fase:"Fase de grupos", encuentros:[
+    { local:"COL", visitante:"POR", hora:"01:30", marcador:"0-0", estado:"programado", n:69 },
+    { local:"COD", visitante:"UZB", hora:"01:30", marcador:"0-0", estado:"programado", n:70 },
+    { local:"DZA", visitante:"AUT", hora:"04:00", marcador:"0-0", estado:"programado", n:71 },
+    { local:"JOR", visitante:"ARG", hora:"04:00", marcador:"0-0", estado:"programado", n:72 }
+  ]},
+  { id:"2026-06-28-d16", fecha:"Domingo 28 de junio",   fase:"Dieciseisavos de final", encuentros:[
+    { local:"2A", visitante:"2B", hora:"21:00", marcador:"VS", estado:"programado", n:73 }
+  ]},
+  { id:"2026-06-29", fecha:"Lunes 29 de junio",     fase:"Dieciseisavos de final", encuentros:[
+    { local:"1C", visitante:"2F",     hora:"19:00", marcador:"VS", estado:"programado", n:74 },
+    { local:"1E", visitante:"3ABCDF", hora:"22:30", marcador:"VS", estado:"programado", n:75 }
+  ]},
+  { id:"2026-06-30", fecha:"Martes 30 de junio",    fase:"Dieciseisavos de final", encuentros:[
+    { local:"1F", visitante:"2C",     hora:"03:00", marcador:"VS", estado:"programado", n:76 },
+    { local:"2E", visitante:"2I",     hora:"19:00", marcador:"VS", estado:"programado", n:77 },
+    { local:"1I", visitante:"3CDFGH", hora:"23:00", marcador:"VS", estado:"programado", n:78 }
+  ]},
+  { id:"2026-07-01", fecha:"Miércoles 1 de julio",  fase:"Dieciseisavos de final", encuentros:[
+    { local:"1A", visitante:"3CEFHI", hora:"03:00", marcador:"VS", estado:"programado", n:79 },
+    { local:"1L", visitante:"3EHIJK", hora:"18:00", marcador:"VS", estado:"programado", n:80 },
+    { local:"1G", visitante:"3AEHIJ", hora:"22:00", marcador:"VS", estado:"programado", n:81 }
+  ]},
+  { id:"2026-07-02", fecha:"Jueves 2 de julio",     fase:"Dieciseisavos de final", encuentros:[
+    { local:"1D", visitante:"3BEFIJ", hora:"02:00", marcador:"VS", estado:"programado", n:82 },
+    { local:"1H", visitante:"2J",     hora:"21:00", marcador:"VS", estado:"programado", n:83 }
+  ]},
+  { id:"2026-07-03", fecha:"Viernes 3 de julio",    fase:"Dieciseisavos de final", encuentros:[
+    { local:"2K", visitante:"2L",     hora:"01:00", marcador:"VS", estado:"programado", n:84 },
+    { local:"1B", visitante:"3EFGIJ", hora:"05:00", marcador:"VS", estado:"programado", n:85 },
+    { local:"2D", visitante:"2G",     hora:"20:00", marcador:"VS", estado:"programado", n:86 }
+  ]},
+  { id:"2026-07-04-d16", fecha:"Sábado 4 de julio", fase:"Dieciseisavos de final", encuentros:[
+    { local:"1J", visitante:"2H",     hora:"00:00", marcador:"VS", estado:"programado", n:87 },
+    { local:"1K", visitante:"3DEIJL", hora:"03:30", marcador:"VS", estado:"programado", n:88 }
+  ]},
+  { id:"2026-07-04-oct", fecha:"Sábado 4 de julio", fase:"Octavos de final", encuentros:[
+    { local:"G73", visitante:"G75", hora:"19:00", marcador:"VS", estado:"programado", n:89 },
+    { local:"G74", visitante:"G77", hora:"23:00", marcador:"VS", estado:"programado", n:90 }
+  ]},
+  { id:"2026-07-05", fecha:"Domingo 5 de julio",    fase:"Octavos de final", encuentros:[
+    { local:"G76", visitante:"G78", hora:"22:00", marcador:"VS", estado:"programado", n:91 }
+  ]},
+  { id:"2026-07-06", fecha:"Lunes 6 de julio",      fase:"Octavos de final", encuentros:[
+    { local:"G79", visitante:"G80", hora:"02:00", marcador:"VS", estado:"programado", n:92 },
+    { local:"G83", visitante:"G84", hora:"21:00", marcador:"VS", estado:"programado", n:93 }
+  ]},
+  { id:"2026-07-07", fecha:"Martes 7 de julio",     fase:"Octavos de final", encuentros:[
+    { local:"G81", visitante:"G82", hora:"02:00", marcador:"VS", estado:"programado", n:94 },
+    { local:"G86", visitante:"G88", hora:"18:00", marcador:"VS", estado:"programado", n:95 },
+    { local:"G85", visitante:"G87", hora:"22:00", marcador:"VS", estado:"programado", n:96 }
+  ]},
+  { id:"2026-07-09", fecha:"Jueves 9 de julio",     fase:"Cuartos de final", encuentros:[
+    { local:"G89", visitante:"G90", hora:"22:00", marcador:"VS", estado:"programado", n:97 }
+  ]},
+  { id:"2026-07-10", fecha:"Viernes 10 de julio",   fase:"Cuartos de final", encuentros:[
+    { local:"G93", visitante:"G94", hora:"21:00", marcador:"VS", estado:"programado", n:98 }
+  ]},
+  { id:"2026-07-11", fecha:"Sábado 11 de julio",    fase:"Cuartos de final", encuentros:[
+    { local:"G91", visitante:"G92", hora:"23:00", marcador:"VS", estado:"programado", n:99 }
+  ]},
+  { id:"2026-07-12", fecha:"Domingo 12 de julio",   fase:"Cuartos de final", encuentros:[
+    { local:"G95", visitante:"G96", hora:"03:00", marcador:"VS", estado:"programado", n:100 }
+  ]},
+  { id:"2026-07-14", fecha:"Martes 14 de julio",    fase:"Semifinales", encuentros:[
+    { local:"G97", visitante:"G98",   hora:"21:00", marcador:"VS", estado:"programado", n:101 }
+  ]},
+  { id:"2026-07-15", fecha:"Miércoles 15 de julio", fase:"Semifinales", encuentros:[
+    { local:"G99", visitante:"G100",  hora:"21:00", marcador:"VS", estado:"programado", n:102 }
+  ]},
+  { id:"tercer-puesto", fecha:"Sábado 18 de julio", fase:"Tercer y cuarto puesto", encuentros:[
+    { local:"P101", visitante:"P102", hora:"23:00", marcador:"VS", estado:"programado", n:103 }
+  ]},
+  { id:"final", fecha:"Domingo 19 de julio",        fase:"Final", encuentros:[
+    { local:"G101", visitante:"G102", hora:"21:00", marcador:"VS", estado:"programado", n:104 }
+  ]},
+];
+
+/* ══════════════════════════════════════════════════════════════════════════
+   API football-data.org
+══════════════════════════════════════════════════════════════════════════ */
+var _API_TOKEN = 'e2a9e5be74014367afcf1cf1138d6341';
+var _apiTimer  = null;
+var _encRef    = null; // referencia al encuentro actual (se asigna en render)
+
+// Nombres de equipo en la API → código FIFA
+var _API_NOMBRES = {
+  'Mexico':'MEX','South Africa':'RSA','South Korea':'KOR','Czechia':'CZE',
+  'Canada':'CAN','Bosnia and Herzegovina':'BIH','Qatar':'QAT','Switzerland':'SUI',
+  'Brazil':'BRA','Morocco':'MAR','Haiti':'HAI','Scotland':'SCO',
+  'United States':'USA','Paraguay':'PAR','Australia':'AUS','Türkiye':'TUR',
+  'Germany':'GER','Curaçao':'CUR',"Côte d'Ivoire":'CIV','Ecuador':'ECU',
+  'Netherlands':'NED','Japan':'JPN','Sweden':'SWE','Tunisia':'TUN',
+  'Belgium':'BEL','Egypt':'EGY','Iran':'IRN','New Zealand':'NZL',
+  'Spain':'ESP','Cape Verde':'CPV','Saudi Arabia':'KSA','Uruguay':'URU',
+  'France':'FRA','Senegal':'SEN','Iraq':'IRQ','Norway':'NOR',
+  'Argentina':'ARG','Algeria':'DZA','Austria':'AUT','Jordan':'JOR',
+  'Portugal':'POR','DR Congo':'COD','Uzbekistan':'UZB','Colombia':'COL',
+  'England':'ENG','Croatia':'CRO','Ghana':'GHA','Panama':'PAN',
+};
+
+function _codigoANombre(cod) {
+  for (var n in _API_NOMBRES) { if (_API_NOMBRES[n] === cod) return n; }
+  return cod;
+}
+
+function _apiEstado(m) {
+  var st = m.status, min = m.minute || 0;
+  if (st === 'IN_PLAY')    return min > 45 ? 'segunda-parte' : 'primera-parte';
+  if (st === 'EXTRA_TIME') return min > 105 ? 'prorroga-segunda' : 'prorroga-primera';
+  var map = { TIMED:'programado', SCHEDULED:'programado', PAUSED:'segunda-parte',
+              PENALTY_SHOOTOUT:'penaltis', FINISHED:'finalizado' };
+  return map[st] || 'programado';
+}
+
+function _apiFetch() {
+  if (!_encRef) return;
+  var dateStr = new URLSearchParams(window.location.search).get('id');
+  if (!dateStr) return;
+  // Solo ejecutar si no hay override manual de estado en la URL
+  var params = new URLSearchParams(window.location.search);
+  var tieneManual = params.get('gL') !== null && params.get('gV') !== null;
+
+  fetch('https://api.football-data.org/v4/competitions/WC/matches?dateFrom=' + dateStr + '&dateTo=' + dateStr,
+    { headers: { 'X-Auth-Token': _API_TOKEN } })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (!data.matches) return;
+    var nomLocal = _codigoANombre(_encRef.local);
+    var nomVis   = _codigoANombre(_encRef.visitante);
+    var found = null;
+    for (var i = 0; i < data.matches.length; i++) {
+      var m = data.matches[i];
+      if (m.homeTeam.name === nomLocal && m.awayTeam.name === nomVis) { found = m; break; }
+    }
+    if (!found) return;
+
+    var estado = _apiEstado(found);
+    var ft  = (found.score || {}).fullTime  || {};
+    var pen = (found.score || {}).penalties || {};
+    var esVivo = ['primera-parte','segunda-parte','prorroga-primera','prorroga-segunda','penaltis'].indexOf(estado) > -1;
+    var esFin  = estado === 'finalizado';
+
+    // Solo actualizar si la API tiene datos de marcador Y no hay override manual
+    if (!tieneManual && (esVivo || esFin) && ft.home != null) {
+      _apiActualizarDOM(estado, ft.home, ft.away, pen.home, pen.away, found.minute);
+    }
+
+    // Repetir cada 60s si sigue vivo
+    clearTimeout(_apiTimer);
+    if (esVivo) _apiTimer = setTimeout(_apiFetch, 60000);
+  })
+  .catch(function(){}); // silencioso — muestra datos manuales si falla
+}
+
+function _apiActualizarDOM(estado, gL, gV, pL, pV, minuto) {
+  var cfgs = {
+    'programado':       { label:'Próximo',       dot:'dot dot-prox' },
+    'primera-parte':    { label:'1ª Parte',       dot:'dot dot-live' },
+    'segunda-parte':    { label:'2ª Parte',       dot:'dot dot-live' },
+    'prorroga-primera': { label:'Prórroga · 1ª', dot:'dot dot-live' },
+    'prorroga-segunda': { label:'Prórroga · 2ª', dot:'dot dot-live' },
+    'penaltis':         { label:'Penaltis',       dot:'dot dot-pen'  },
+    'finalizado':       { label:'Finalizado',     dot:'dot dot-fin'  },
+  };
+  var cfg = cfgs[estado] || cfgs['programado'];
+  var esLive = ['primera-parte','segunda-parte','prorroga-primera','prorroga-segunda','penaltis'].indexOf(estado) > -1;
+
+  // Estado en barra info
+  var eHTML = '<span class="' + cfg.dot + '"></span>' + cfg.label;
+  if (esLive && minuto) eHTML += ' <span class="minuto-live">· ' + minuto + "'</span>";
+  var el = document.querySelector('.info-estado');
+  if (el) el.innerHTML = eHTML;
+
+  // Línea live
+  var panel = document.getElementById('panel');
+  if (panel) esLive ? panel.classList.add('is-live') : panel.classList.remove('is-live');
+
+  // Marcador
+  var sw = document.getElementById('score-wrap');
+  if (!sw || gL == null) return;
+  var penHTML = '';
+  if (pL != null && pV != null) {
+    penHTML = '<div class="pen-bloque"><div class="pen-label">Penaltis</div>'
+      + '<div class="pen-linea"></div><div class="pen-score">' + pL + ' – ' + pV + '</div></div>';
+  }
+  sw.innerHTML = '<div class="score-nums">'
+    + '<div class="score-box">' + gL + '</div>'
+    + '<div class="score-dash">–</div>'
+    + '<div class="score-box">' + gV + '</div>'
+    + '</div>' + penHTML;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════════════════════════════════ */
+(function(){
+  var CDN = 'https://www.ondacero.es/newa3flash/onda_cero/mundialcatar/cuadro/flags/4x3/';
+
+  var ESTADOS_CFG = {
+    'programado':        { label:'Próximo',       dot:'dot dot-prox' },
+    'primera-parte':     { label:'1ª Parte',       dot:'dot dot-live' },
+    'segunda-parte':     { label:'2ª Parte',       dot:'dot dot-live' },
+    'prorroga-primera':  { label:'Prórroga · 1ª', dot:'dot dot-live' },
+    'prorroga-segunda':  { label:'Prórroga · 2ª', dot:'dot dot-live' },
+    'penaltis':          { label:'Penaltis',       dot:'dot dot-pen'  },
+    'finalizado':        { label:'Finalizado',     dot:'dot dot-fin'  },
+  };
+
+  var FASE_LABELS = {
+    'Fase de grupos':         '',
+    'Dieciseisavos de final': 'Dieciseisavos',
+    'Octavos de final':       'Octavos',
+    'Cuartos de final':       'Cuartos de final',
+    'Semifinales':            'Semifinales',
+    'Tercer y cuarto puesto': '3er y 4º puesto',
+    'Final':                  'Final',
+  };
+
+  /* ── Leer URL params ── */
+  var params = new URLSearchParams(window.location.search);
+  var id     = params.get('id');
+  var numero = parseInt(params.get('numero') || '1', 10) - 1;
+
+  /* ── Buscar partido ── */
+  var dia = null, enc = null;
+  for (var i = 0; i < CALENDARIO.length; i++) {
+    if (CALENDARIO[i].id === id) { dia = CALENDARIO[i]; break; }
+  }
+  if (dia) enc = dia.encuentros[numero] || null;
+  _encRef = enc; // guardar para la API
+
+  if (!dia || !enc) {
+    document.getElementById('marcador').innerHTML =
+      '<div class="error-msg">Partido no encontrado. Comprueba los parámetros id y numero.</div>';
+    return;
+  }
+
+  /* ── Datos de equipo ── */
+  var locData = PAISES[enc.local]     || { nombre:enc.local,     flag:'xx', grupo:'', url:'#' };
+  var visData = PAISES[enc.visitante] || { nombre:enc.visitante, flag:'xx', grupo:'', url:'#' };
+
+  /* ── Estado inicial (manual o del calendario) ── */
+  var estadoBase = enc.estado === 'cronica' ? 'finalizado' : (enc.estado || 'programado');
+  var estado = params.get('estado') || estadoBase;
+  var cfg    = ESTADOS_CFG[estado]  || ESTADOS_CFG['programado'];
+  var esLive = ['primera-parte','segunda-parte','prorroga-primera','prorroga-segunda','penaltis'].indexOf(estado) > -1;
+  var esProg = estado === 'programado';
+
+  /* ── Goles ── */
+  var gL = 0, gV = 0;
+  if (params.get('gL') !== null && params.get('gV') !== null) {
+    gL = parseInt(params.get('gL'), 10) || 0;
+    gV = parseInt(params.get('gV'), 10) || 0;
+  }
+
+  /* ── Penaltis ── */
+  var pL = params.get('pL'), pV = params.get('pV');
+  var penaltis = {
+    local: parseInt(pL || 0), visitante: parseInt(pV || 0),
+    mostrar: !!(pL !== null && pL !== '' && pV !== null && pV !== '')
+  };
+
+  /* ── Extras ── */
+  var goleadoresL = params.get('golL') || '';
+  var goleadoresV = params.get('golV') || '';
+  var estadio     = params.get('estadio') || (enc.n ? (ESTADIOS[enc.n] || '') : '');
+  var minuto      = params.get('minuto') || '';
+
+  /* ── Grupo auto-detectado ── */
+  var grupo = locData.grupo || visData.grupo || '';
+  var grupoData = grupo ? (GRUPOS[grupo] || null) : null;
+
+  /* ── Banderas ── */
+  var fl = document.getElementById('flag-local');
+  fl.src = CDN + locData.flag + '.svg';
+  fl.alt = locData.nombre;
+
+  var fv = document.getElementById('flag-visit');
+  fv.src = CDN + visData.flag + '.svg';
+  fv.alt = visData.nombre;
+
+  /* ── Nombres (enlazados) ── */
+  var nl = document.getElementById('nombre-local');
+  nl.textContent = locData.nombre;
+  nl.href = locData.url || '#';
+
+  var nv = document.getElementById('nombre-visit');
+  nv.textContent = visData.nombre;
+  nv.href = visData.url || '#';
+
+  /* ── Goleadores ── */
+  if (goleadoresL) document.getElementById('goles-local').textContent = goleadoresL;
+  if (goleadoresV) document.getElementById('goles-visit').textContent = goleadoresV;
+
+  /* ── Info bar ── */
+  var faseLabel, faseUrl;
+  if (grupo && dia.fase === 'Fase de grupos') {
+    faseLabel = 'Grupo ' + grupo;
+    faseUrl   = grupoData ? grupoData.url : URL_CALENDARIO;
+  } else {
+    faseLabel = FASE_LABELS[dia.fase] || dia.fase;
+    faseUrl   = URL_CALENDARIO;
+  }
+
+  var infoBar = document.getElementById('info-bar');
+  var leftHTML = '<a class="info-fase" href="' + faseUrl + '" target="_top">' + faseLabel + '</a>';
+  if (estadio) {
+    leftHTML += '<span class="info-sep-bar">·</span>'
+              + '<span class="info-estadio">' + estadio + '</span>';
+  }
+  leftHTML += '<span class="info-sep-bar">·</span>'
+            + '<span class="info-estadio">' + dia.fecha + '</span>';
+
+  var eHTML = '<span class="' + cfg.dot + '"></span>' + cfg.label;
+  if (esLive && minuto) eHTML += ' <span class="minuto-live">· ' + minuto + '</span>';
+  var centerHTML = '<span class="info-estado">' + eHTML + '</span>';
+  var rightHTML  = '<span class="info-cal"><a href="' + URL_CALENDARIO + '" target="_top">▶ Calendario</a></span>';
+  infoBar.innerHTML = leftHTML + centerHTML + rightHTML;
+
+  /* ── Panel live ── */
+  if (esLive) document.getElementById('panel').classList.add('is-live');
+
+  /* ── Marcador central (inicial) ── */
+  var sw = document.getElementById('score-wrap');
+  if (esProg) {
+    sw.innerHTML = '<div class="hora-grande">' + enc.hora + 'h</div>';
+  } else {
+    var penHTML = '';
+    if (penaltis.mostrar) {
+      penHTML = '<div class="pen-bloque">'
+        + '<div class="pen-label">Penaltis</div>'
+        + '<div class="pen-linea"></div>'
+        + '<div class="pen-score">' + penaltis.local + ' – ' + penaltis.visitante + '</div>'
+        + '</div>';
+    }
+    sw.innerHTML =
+      '<div class="score-nums">'
+        + '<div class="score-box">' + gL + '</div>'
+        + '<div class="score-dash">–</div>'
+        + '<div class="score-box">' + gV + '</div>'
+      + '</div>' + penHTML;
+  }
+
+  /* ── Arrancar: override primero, luego API ── */
+  _overrideFetch();
+
+})();
+
+/* ══════════════════════════════════════════════════════════════════════════
+   OVERRIDE — lee datos guardados desde el editor (Netlify Blobs)
+   Prioridad: Override > API football-data > datos del calendario
+══════════════════════════════════════════════════════════════════════════ */
+var _overrideTimer = null;
+
+function _overrideFetch() {
+  var params = new URLSearchParams(window.location.search);
+  var id     = params.get('id');
+  var numero = params.get('numero') || '1';
+  if (!id) { _apiFetch(); return; }
+
+  fetch('/.netlify/functions/partido?id=' + encodeURIComponent(id) + '&numero=' + encodeURIComponent(numero))
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (!data || Object.keys(data).length === 0) {
+      // Sin override → delegar en la API de football-data
+      _apiFetch();
+      return;
+    }
+    // Aplicar override
+    var estado = data.estado || 'programado';
+    var gL     = data.gL != null ? data.gL : null;
+    var gV     = data.gV != null ? data.gV : null;
+    var pL     = (data.pL != null && data.pV != null) ? data.pL : null;
+    var pV     = (data.pL != null && data.pV != null) ? data.pV : null;
+    if (gL != null) _apiActualizarDOM(estado, gL, gV, pL, pV, data.minuto || '');
+
+    // Goleadores
+    var elGL = document.getElementById('goles-local');
+    var elGV = document.getElementById('goles-visit');
+    if (elGL && data.golL != null) elGL.textContent = data.golL;
+    if (elGV && data.golV != null) elGV.textContent = data.golV;
+
+    // Seguir polling cada 30s
+    clearTimeout(_overrideTimer);
+    _overrideTimer = setTimeout(_overrideFetch, 30000);
+  })
+  .catch(function(){
+    // Función no disponible (desarrollo local) → API normal
+    _apiFetch();
+  });
+}
+</script>
+
+</body>
+</html>
