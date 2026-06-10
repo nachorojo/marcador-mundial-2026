@@ -744,8 +744,11 @@ function _apiActualizarDOM(estado, gL, gV, pL, pV, minuto) {
   if (!sw || gL == null) return;
   var penHTML = '';
   if (pL != null && pV != null) {
-    penHTML = '<div class="pen-bloque"><div class="pen-label">Penaltis</div>'
-      + '<div class="pen-linea"></div><div class="pen-score">' + pL + ' – ' + pV + '</div></div>';
+    penHTML = '<div class="pen-bloque"><div class="pen-chip">'
+      + '<span class="pen-num">' + pL + '</span>'
+      + '<span class="pen-sep">–</span>'
+      + '<span class="pen-num">' + pV + '</span>'
+      + '</div></div>';
   }
   sw.innerHTML = '<div class="score-nums">'
     + '<div class="score-box">' + gL + '</div>'
