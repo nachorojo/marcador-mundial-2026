@@ -907,46 +907,41 @@ function _apiActualizarDOM(estado, gL, gV, pL, pV, minuto) {
 })();
 
 /* ══════════════════════════════════════════════════════════════════════════
-   OVERRIDE — lee datos guardados desde el editor (Netlify Blobs)
-   Prioridad: Override > API football-data > datos del calendario
+   OVERRIDE — lee datos guardados desde el editor (Firebase Realtime DB)
+   Prioridad: Override > datos del calendario
 ══════════════════════════════════════════════════════════════════════════ */
+var _FIREBASE = 'https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.app';
 var _overrideTimer = null;
 
 function _overrideFetch() {
   var params = new URLSearchParams(window.location.search);
   var id     = params.get('id');
   var numero = params.get('numero') || '1';
-  if (!id) { _apiFetch(); return; }
+  if (!id) return;
 
-  fetch('/.netlify/functions/partido?id=' + encodeURIComponent(id) + '&numero=' + encodeURIComponent(numero))
+  var key = id + '-' + numero;
+  fetch(_FIREBASE + '/partidos/' + key + '.json')
   .then(function(r){ return r.json(); })
   .then(function(data){
-    if (!data || Object.keys(data).length === 0) {
-      // Sin override → delegar en la API de football-data
-      _apiFetch();
-      return;
+    if (data && Object.keys(data).length > 0) {
+      var estado = data.estado || 'programado';
+      var gL = data.gL != null ? data.gL : null;
+      var gV = data.gV != null ? data.gV : null;
+      var pL = (data.pL != null && data.pV != null) ? data.pL : null;
+      var pV = (data.pL != null && data.pV != null) ? data.pV : null;
+      if (gL != null) _apiActualizarDOM(estado, gL, gV, pL, pV, data.minuto || '');
+      var elGL = document.getElementById('goles-local');
+      var elGV = document.getElementById('goles-visit');
+      if (elGL && data.golL) elGL.textContent = data.golL;
+      if (elGV && data.golV) elGV.textContent = data.golV;
     }
-    // Aplicar override
-    var estado = data.estado || 'programado';
-    var gL     = data.gL != null ? data.gL : null;
-    var gV     = data.gV != null ? data.gV : null;
-    var pL     = (data.pL != null && data.pV != null) ? data.pL : null;
-    var pV     = (data.pL != null && data.pV != null) ? data.pV : null;
-    if (gL != null) _apiActualizarDOM(estado, gL, gV, pL, pV, data.minuto || '');
-
-    // Goleadores
-    var elGL = document.getElementById('goles-local');
-    var elGV = document.getElementById('goles-visit');
-    if (elGL && data.golL != null) elGL.textContent = data.golL;
-    if (elGV && data.golV != null) elGV.textContent = data.golV;
-
     // Seguir polling cada 30s
     clearTimeout(_overrideTimer);
     _overrideTimer = setTimeout(_overrideFetch, 30000);
   })
   .catch(function(){
-    // Función no disponible (desarrollo local) → API normal
-    _apiFetch();
+    clearTimeout(_overrideTimer);
+    _overrideTimer = setTimeout(_overrideFetch, 60000);
   });
 }
 </script>

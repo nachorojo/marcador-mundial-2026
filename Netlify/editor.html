@@ -439,6 +439,8 @@ function _mostrarMsgGuardar(ok, texto) {
   setTimeout(function(){ el.style.display = 'none'; }, 4000);
 }
 
+var _FIREBASE = 'https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.app';
+
 function guardarEnDirecto() {
   var info = _getOverridePayload();
   if (Object.keys(info.payload).length === 0) {
@@ -449,49 +451,42 @@ function guardarEnDirecto() {
   btn.textContent = '⏳ Guardando…';
   btn.disabled = true;
 
-  fetch('/.netlify/functions/partido?id=' + encodeURIComponent(info.id) + '&numero=' + encodeURIComponent(info.numero), {
-    method: 'POST',
+  var key = info.id + '-' + info.numero;
+  fetch(_FIREBASE + '/partidos/' + key + '.json', {
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(info.payload)
   })
   .then(function(r){ return r.json(); })
-  .then(function(data){
+  .then(function(){
     btn.textContent = '⚡ Guardar en directo';
     btn.disabled = false;
-    if (data.ok) {
-      _mostrarMsgGuardar(true, '✅ Guardado. El marcador se actualizará en ~30 segundos.');
-    } else {
-      _mostrarMsgGuardar(false, '❌ Error: ' + (data.error || 'desconocido'));
-    }
+    _mostrarMsgGuardar(true, '✅ Guardado. El marcador se actualiza en ~30 segundos.');
   })
-  .catch(function(e){
+  .catch(function(){
     btn.textContent = '⚡ Guardar en directo';
     btn.disabled = false;
-    _mostrarMsgGuardar(false, '❌ No se pudo conectar con el servidor.');
+    _mostrarMsgGuardar(false, '❌ Error al guardar. Comprueba la conexión.');
   });
 }
 
 function limpiarOverride() {
   var info = _getOverridePayload();
+  var key  = info.id + '-' + info.numero;
   var btn  = document.getElementById('btn-limpiar');
   btn.textContent = '⏳';
   btn.disabled = true;
 
-  fetch('/.netlify/functions/partido?id=' + encodeURIComponent(info.id) + '&numero=' + encodeURIComponent(info.numero), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: '{}'
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data){
+  fetch(_FIREBASE + '/partidos/' + key + '.json', { method: 'DELETE' })
+  .then(function(){
     btn.textContent = '✕ Limpiar';
     btn.disabled = false;
-    _mostrarMsgGuardar(true, '🔄 Override borrado. El marcador volverá a usar la API automáticamente.');
+    _mostrarMsgGuardar(true, '🔄 Datos borrados. El marcador vuelve al estado del calendario.');
   })
   .catch(function(){
     btn.textContent = '✕ Limpiar';
     btn.disabled = false;
-    _mostrarMsgGuardar(false, '❌ No se pudo conectar con el servidor.');
+    _mostrarMsgGuardar(false, '❌ Error al limpiar.');
   });
 }
 
