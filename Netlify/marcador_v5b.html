@@ -907,11 +907,26 @@ function _apiActualizarDOM(estado, gL, gV, pL, pV, minuto) {
 })();
 
 /* ══════════════════════════════════════════════════════════════════════════
-   OVERRIDE — lee datos guardados desde el editor (Firebase Realtime DB)
-   Prioridad: Override > datos del calendario
+   OVERRIDE — Firebase Realtime DB + caché localStorage
+   Al recargar: muestra el último estado conocido al instante,
+   luego confirma/actualiza desde Firebase.
 ══════════════════════════════════════════════════════════════════════════ */
 var _FIREBASE = 'https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.app';
 var _overrideTimer = null;
+
+function _aplicarDatos(data) {
+  if (!data || Object.keys(data).length === 0) return;
+  var estado = data.estado || 'programado';
+  var gL = data.gL != null ? data.gL : null;
+  var gV = data.gV != null ? data.gV : null;
+  var pL = (data.pL != null && data.pV != null) ? data.pL : null;
+  var pV = (data.pL != null && data.pV != null) ? data.pV : null;
+  if (gL != null) _apiActualizarDOM(estado, gL, gV, pL, pV, data.minuto || '');
+  var elGL = document.getElementById('goles-local');
+  var elGV = document.getElementById('goles-visit');
+  if (elGL && data.golL) elGL.textContent = data.golL;
+  if (elGV && data.golV) elGV.textContent = data.golV;
+}
 
 function _overrideFetch() {
   var params = new URLSearchParams(window.location.search);
@@ -919,27 +934,34 @@ function _overrideFetch() {
   var numero = params.get('numero') || '1';
   if (!id) return;
 
-  var key = id + '-' + numero;
+  // Si hay override manual en la URL, no tocar nada — URL manda
+  if (params.get('estado') || params.get('gL') !== null) return;
+
+  var key      = id + '-' + numero;
+  var lsKey    = 'mw26-' + key;
+
+  // 1. Aplicar caché localStorage inmediatamente (sin parpadeo al recargar)
+  try {
+    var cached = localStorage.getItem(lsKey);
+    if (cached) _aplicarDatos(JSON.parse(cached));
+  } catch(e) {}
+
+  // 2. Consultar Firebase para confirmar/actualizar
   fetch(_FIREBASE + '/partidos/' + key + '.json')
   .then(function(r){ return r.json(); })
   .then(function(data){
     if (data && Object.keys(data).length > 0) {
-      var estado = data.estado || 'programado';
-      var gL = data.gL != null ? data.gL : null;
-      var gV = data.gV != null ? data.gV : null;
-      var pL = (data.pL != null && data.pV != null) ? data.pL : null;
-      var pV = (data.pL != null && data.pV != null) ? data.pV : null;
-      if (gL != null) _apiActualizarDOM(estado, gL, gV, pL, pV, data.minuto || '');
-      var elGL = document.getElementById('goles-local');
-      var elGV = document.getElementById('goles-visit');
-      if (elGL && data.golL) elGL.textContent = data.golL;
-      if (elGV && data.golV) elGV.textContent = data.golV;
+      _aplicarDatos(data);
+      try { localStorage.setItem(lsKey, JSON.stringify(data)); } catch(e) {}
+    } else {
+      // Sin datos en Firebase: borrar caché para no mostrar estado obsoleto
+      try { localStorage.removeItem(lsKey); } catch(e) {}
     }
-    // Seguir polling cada 30s
     clearTimeout(_overrideTimer);
-    _overrideTimer = setTimeout(_overrideFetch, 30000);
+    _overrideTimer = setTimeout(_overrideFetch, 20000);
   })
   .catch(function(){
+    // Sin conexión: el localStorage ya mostró el último estado conocido
     clearTimeout(_overrideTimer);
     _overrideTimer = setTimeout(_overrideFetch, 60000);
   });
