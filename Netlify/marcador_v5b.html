@@ -958,7 +958,7 @@ function _overrideFetch() {
       try { localStorage.removeItem(lsKey); } catch(e) {}
     }
     clearTimeout(_overrideTimer);
-    _overrideTimer = setTimeout(_overrideFetch, 20000);
+    _overrideTimer = setTimeout(_overrideFetch, 10000);
   })
   .catch(function(){
     // Sin conexión: el localStorage ya mostró el último estado conocido
