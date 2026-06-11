@@ -758,6 +758,15 @@ function _apiActualizarDOM(estado, gL, gV, pL, pV, minuto) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   EQUIPOS KO — carga nombres de equipos eliminatorias desde Firebase
+══════════════════════════════════════════════════════════════════════════ */
+window._equiposKO = {};
+fetch('https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.app/equipos_ko.json')
+.then(function(r){ return r.json(); })
+.then(function(d){ if (d) window._equiposKO = d; })
+.catch(function(){});
+
+/* ══════════════════════════════════════════════════════════════════════════
    RENDER
 ══════════════════════════════════════════════════════════════════════════ */
 (function(){
@@ -802,9 +811,10 @@ function _apiActualizarDOM(estado, gL, gV, pL, pV, minuto) {
     return;
   }
 
-  /* ── Datos de equipo ── */
-  var locData = PAISES[enc.local]     || { nombre:enc.local,     flag:'xx', grupo:'', url:'#' };
-  var visData = PAISES[enc.visitante] || { nombre:enc.visitante, flag:'xx', grupo:'', url:'#' };
+  /* ── Datos de equipo (con soporte para códigos KO: 2A, G73, etc.) ── */
+  var _KO = window._equiposKO || {};
+  var locData = PAISES[enc.local]     || _KO[enc.local]     || { nombre:enc.local,     flag:'xx', grupo:'', url:'#' };
+  var visData = PAISES[enc.visitante] || _KO[enc.visitante] || { nombre:enc.visitante, flag:'xx', grupo:'', url:'#' };
 
   /* ── Estado inicial (manual o del calendario) ── */
   var estadoBase = enc.estado === 'cronica' ? 'finalizado' : (enc.estado || 'programado');

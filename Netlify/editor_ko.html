@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equipos KO · Mundial 2026</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:#1e293b;font-size:14px;}
+header{background:#0a1628;color:#fff;padding:16px 24px;display:flex;align-items:center;gap:12px;}
+header h1{font-size:16px;font-weight:700;}
+header span{font-size:12px;color:#94a3b8;}
+.container{max-width:900px;margin:0 auto;padding:24px 16px;}
+.intro{background:#fff;border-radius:10px;padding:16px;margin-bottom:20px;border:1.5px solid #e2e8f0;font-size:13px;color:#475569;line-height:1.6;}
+.intro strong{color:#0a1628;}
+.fase-titulo{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin:24px 0 10px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:4px;}
+.campo{background:#fff;border-radius:8px;padding:10px 12px;border:1.5px solid #e2e8f0;}
+.campo label{display:block;font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:4px;font-family:monospace;}
+.campo-row{display:flex;gap:6px;}
+.campo input{padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;outline:none;transition:border-color .15s;}
+.campo input:focus{border-color:#1d4ed8;}
+.campo input.inp-nombre{flex:1;}
+.campo input.inp-flag{width:52px;font-family:monospace;}
+.btn-guardar{
+  width:100%;padding:12px;background:#16a34a;color:#fff;border:none;border-radius:8px;
+  font-size:14px;font-weight:700;cursor:pointer;margin-top:20px;transition:background .15s;
+}
+.btn-guardar:hover{background:#15803d;}
+.btn-guardar:disabled{background:#94a3b8;cursor:not-allowed;}
+.msg{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;display:none;text-align:center;}
+.msg.ok{background:#dcfce7;color:#15803d;display:block;}
+.msg.err{background:#fee2e2;color:#dc2626;display:block;}
+.flag-hint{font-size:10px;color:#94a3b8;margin-top:4px;}
+.btn-cargar{font-size:12px;font-weight:600;color:#1d4ed8;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Editor Equipos KO · Mundial 2026</h1>
+  <span>· ondacero.es</span>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <strong>¿Cómo funciona?</strong> A medida que avanza el Mundial, rellena el nombre y el código de bandera de cada equipo clasificado. Pulsa "Guardar todo" y los marcadores del directo lo actualizarán en ~10 segundos.<br><br>
+    Deja vacío si el equipo aún no se conoce. <button class="btn-cargar" onclick="cargarDesdeFB()">↓ Cargar datos guardados</button>
+  </div>
+
+  <!-- DIECISEISAVOS -->
+  <div class="fase-titulo">Dieciseisavos — Clasificados de grupos</div>
+  <div class="grid" id="grid-d16"></div>
+
+  <!-- GANADORES D16 para Octavos -->
+  <div class="fase-titulo">Octavos — Ganadores de dieciseisavos</div>
+  <div class="grid" id="grid-oct"></div>
+
+  <!-- CUARTOS -->
+  <div class="fase-titulo">Cuartos — Ganadores de octavos</div>
+  <div class="grid" id="grid-cto"></div>
+
+  <!-- SEMIS -->
+  <div class="fase-titulo">Semifinales — Ganadores de cuartos</div>
+  <div class="grid" id="grid-sf"></div>
+
+  <!-- FINAL -->
+  <div class="fase-titulo">Final y 3er puesto</div>
+  <div class="grid" id="grid-final"></div>
+
+  <button class="btn-guardar" id="btn-guardar" onclick="guardarTodo()">💾 Guardar todo en Firebase</button>
+  <div class="msg" id="msg"></div>
+
+</div>
+
+<script>
+var FIREBASE = 'https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.app';
+
+// Códigos por fase (tal como aparecen en el calendario)
+var GRUPOS_D16 = [
+  '1A','2A','1B','2B','1C','2C','1D','2D',
+  '1E','2E','1F','2F','1G','2G','1H','2H',
+  '1I','2I','1J','2J','1K','2K','1L','2L',
+  '3ABCDF','3BEFIJ','3CDFGH','3CEFHI','3DEIJL','3EFGIJ','3AEHIJ','3EHIJK'
+];
+
+var CODES_OCT = ['G73','G74','G75','G76','G77','G78','G79','G80','G81','G82','G83','G84','G85','G86','G87','G88'];
+var CODES_CTO = ['G89','G90','G91','G92','G93','G94','G95','G96'];
+var CODES_SF  = ['G97','G98','G99','G100'];
+var CODES_FIN = ['G101','G102','P101','P102'];
+
+function crearCampos(codes, gridId) {
+  var grid = document.getElementById(gridId);
+  codes.forEach(function(code) {
+    var div = document.createElement('div');
+    div.className = 'campo';
+    div.innerHTML =
+      '<label>' + code + '</label>'
+      + '<div class="campo-row">'
+      + '<input class="inp-nombre" id="n-' + code + '" placeholder="ej: Argentina" type="text">'
+      + '<input class="inp-flag"   id="f-' + code + '" placeholder="ar" type="text" maxlength="6">'
+      + '</div>'
+      + '<div class="flag-hint">bandera: código 2 letras ISO (es, fr, ar…)</div>';
+    grid.appendChild(div);
+  });
+}
+
+crearCampos(GRUPOS_D16, 'grid-d16');
+crearCampos(CODES_OCT,  'grid-oct');
+crearCampos(CODES_CTO,  'grid-cto');
+crearCampos(CODES_SF,   'grid-sf');
+crearCampos(CODES_FIN,  'grid-final');
+
+function cargarDesdeFB() {
+  fetch(FIREBASE + '/equipos_ko.json')
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (!data) { mostrarMsg(false, 'No hay datos guardados todavía.'); return; }
+    Object.keys(data).forEach(function(code) {
+      var n = document.getElementById('n-' + code);
+      var f = document.getElementById('f-' + code);
+      if (n && data[code].nombre) n.value = data[code].nombre;
+      if (f && data[code].flag)   f.value = data[code].flag;
+    });
+    mostrarMsg(true, '✅ Datos cargados desde Firebase.');
+  })
+  .catch(function(){ mostrarMsg(false, '❌ Error al cargar.'); });
+}
+
+function guardarTodo() {
+  var todos = GRUPOS_D16.concat(CODES_OCT, CODES_CTO, CODES_SF, CODES_FIN);
+  var payload = {};
+  todos.forEach(function(code) {
+    var n = (document.getElementById('n-' + code) || {}).value || '';
+    var f = (document.getElementById('f-' + code) || {}).value || '';
+    if (n.trim()) payload[code] = { nombre: n.trim(), flag: f.trim() || 'xx' };
+  });
+
+  var btn = document.getElementById('btn-guardar');
+  btn.disabled = true;
+  btn.textContent = '⏳ Guardando…';
+
+  fetch(FIREBASE + '/equipos_ko.json', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(){ mostrarMsg(true, '✅ Guardado. Los marcadores actualizarán en ~10 segundos.'); })
+  .catch(function(){ mostrarMsg(false, '❌ Error al guardar.'); })
+  .finally(function(){
+    btn.disabled = false;
+    btn.textContent = '💾 Guardar todo en Firebase';
+  });
+}
+
+function mostrarMsg(ok, txt) {
+  var el = document.getElementById('msg');
+  el.className = 'msg ' + (ok ? 'ok' : 'err');
+  el.textContent = txt;
+  setTimeout(function(){ el.className = 'msg'; }, 5000);
+}
+
+// Cargar al abrir
+cargarDesdeFB();
+</script>
+</body>
+</html>
