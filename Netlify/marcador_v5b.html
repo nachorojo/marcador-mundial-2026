@@ -939,7 +939,8 @@ function _aplicarDatos(data) {
   var gV = data.gV != null ? data.gV : null;
   var pL = (data.pL != null && data.pV != null) ? data.pL : null;
   var pV = (data.pL != null && data.pV != null) ? data.pV : null;
-  if (gL != null) _apiActualizarDOM(estado, gL, gV, pL, pV, data.minuto || '');
+  // Siempre actualizar estado/dot, aunque no haya goles
+  _apiActualizarDOM(estado, gL, gV, pL, pV, data.minuto || '');
   var elGL = document.getElementById('goles-local');
   var elGV = document.getElementById('goles-visit');
   if (elGL && data.golL) elGL.textContent = data.golL;
@@ -952,8 +953,11 @@ function _overrideFetch() {
   var numero = params.get('numero') || '1';
   if (!id) return;
 
-  // Si hay override manual en la URL, no tocar nada — URL manda
-  if (params.get('estado') || params.get('gL') !== null) return;
+  // Solo saltar Firebase si hay goles explícitos en la URL (override manual específico)
+  if (params.get('gL') !== null && params.get('gV') !== null) return;
+
+  // Sanitizar numero (eliminar cualquier carácter no numérico)
+  numero = (numero + '').replace(/[^0-9]/g, '') || '1';
 
   var key      = id + '-' + numero;
   var lsKey    = 'mw26-' + key;
