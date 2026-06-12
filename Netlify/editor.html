@@ -112,10 +112,18 @@ textarea.code-out:focus{border-color:#3b82f6;}
 
     <div class="section-title">Estado del partido</div>
 
+    <div id="fb-estado-actual" style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:7px;padding:8px 12px;font-size:12px;color:#15803d;margin-bottom:10px;display:none;">
+      <strong>Firebase ahora:</strong> <span id="fb-resumen">—</span>
+      <button onclick="cargarDesdeFB()" style="float:right;background:none;border:none;font-size:11px;color:#15803d;cursor:pointer;text-decoration:underline;font-weight:600;">↓ Rellenar form</button>
+    </div>
+    <div id="fb-sin-datos" style="background:#fafafa;border:1.5px solid #e2e8f0;border-radius:7px;padding:8px 12px;font-size:12px;color:#94a3b8;margin-bottom:10px;display:none;">
+      Sin datos en Firebase — el widget muestra el calendario
+    </div>
+
     <div class="field">
       <label>Estado</label>
       <select id="sel-estado" onchange="actualizar()">
-        <option value="">Auto (API o calendario)</option>
+        <option value="">— sin cambios —</option>
         <option value="programado">Programado</option>
         <option value="primera-parte">1ª Parte</option>
         <option value="segunda-parte">2ª Parte</option>
@@ -126,7 +134,7 @@ textarea.code-out:focus{border-color:#3b82f6;}
       </select>
     </div>
 
-    <div class="section-title">Marcador <span class="opt-label">(opcional · la API lo rellena sola si el partido está en juego)</span></div>
+    <div class="section-title">Marcador <span class="opt-label">(opcional)</span></div>
 
     <div class="row2">
       <div class="field">
@@ -182,7 +190,7 @@ textarea.code-out:focus{border-color:#3b82f6;}
     <div class="preview-box">
       <h2>Preview</h2>
       <iframe id="preview-frame" src="about:blank"></iframe>
-      <p class="preview-note">Se refresca automáticamente · La API actualiza el marcador si el partido está en juego</p>
+      <p class="preview-note">Lo que ven los usuarios en ondacero.es ahora mismo · Se actualiza cada ~10s desde Firebase</p>
     </div>
 
     <div class="codes-box">
@@ -334,7 +342,17 @@ function onNumChange(){
   document.getElementById('lbl-goll').textContent = 'Goleadores ' + locD.nombre;
   document.getElementById('lbl-golv').textContent = 'Goleadores ' + visD.nombre;
 
+  // Limpiar form al cambiar partido
+  document.getElementById('sel-estado').value = '';
+  document.getElementById('inp-gl').value  = '';
+  document.getElementById('inp-gv').value  = '';
+  document.getElementById('inp-pl').value  = '';
+  document.getElementById('inp-pv').value  = '';
+  document.getElementById('inp-goll').value = '';
+  document.getElementById('inp-golv').value = '';
+
   actualizar();
+  _consultarFirebase();
 }
 
 function buildURL(){
@@ -350,14 +368,10 @@ function buildURL(){
   var goll   = document.getElementById('inp-goll').value.trim();
   var golv   = document.getElementById('inp-golv').value.trim();
 
+  // La URL del CMS solo lleva id y numero — el estado y goles van por Firebase
   var p = new URLSearchParams();
   p.set('id', dia.id);
   p.set('numero', ni + 1);
-  if (estado)                 p.set('estado', estado);
-  if (gl !== '' && gv !== '') { p.set('gL', gl); p.set('gV', gv); }
-  if (pl !== '' && pv !== '') { p.set('pL', pl); p.set('pV', pv); }
-  if (goll) p.set('golL', goll);
-  if (golv) p.set('golV', golv);
 
   return WIDGET_URL + '?' + p.toString();
 }
@@ -488,6 +502,53 @@ function limpiarOverride() {
     btn.disabled = false;
     _mostrarMsgGuardar(false, '❌ Error al limpiar.');
   });
+}
+
+function _consultarFirebase() {
+  var di  = parseInt(document.getElementById('sel-fecha').value);
+  var ni  = parseInt(document.getElementById('sel-num').value);
+  var dia = CALENDARIO[di];
+  var key = dia.id + '-' + (ni + 1);
+  var elAct  = document.getElementById('fb-estado-actual');
+  var elNone = document.getElementById('fb-sin-datos');
+  elAct.style.display = 'none';
+  elNone.style.display = 'none';
+  elAct._data = null;
+
+  fetch(_FIREBASE + '/partidos/' + key + '.json')
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data && Object.keys(data).length > 0) {
+      var labels = {
+        'programado':'Programado','primera-parte':'1ª Parte','segunda-parte':'2ª Parte',
+        'prorroga-primera':'Prórroga 1ª','prorroga-segunda':'Prórroga 2ª',
+        'penaltis':'Penaltis','finalizado':'Finalizado'
+      };
+      var resumen = labels[data.estado] || data.estado || '?';
+      if (data.gL != null && data.gV != null) resumen += ' · ' + data.gL + '-' + data.gV;
+      if (data.pL != null && data.pV != null) resumen += ' (p. ' + data.pL + '-' + data.pV + ')';
+      document.getElementById('fb-resumen').textContent = resumen;
+      elAct.style.display = 'block';
+      elAct._data = data;
+    } else {
+      elNone.style.display = 'block';
+    }
+  })
+  .catch(function(){ elNone.style.display = 'block'; });
+}
+
+function cargarDesdeFB() {
+  var elAct = document.getElementById('fb-estado-actual');
+  var data  = elAct._data;
+  if (!data) return;
+  if (data.estado) document.getElementById('sel-estado').value = data.estado;
+  document.getElementById('inp-gl').value   = data.gL != null ? data.gL : '';
+  document.getElementById('inp-gv').value   = data.gV != null ? data.gV : '';
+  document.getElementById('inp-pl').value   = data.pL != null ? data.pL : '';
+  document.getElementById('inp-pv').value   = data.pV != null ? data.pV : '';
+  document.getElementById('inp-goll').value = data.golL || '';
+  document.getElementById('inp-golv').value = data.golV || '';
+  actualizar();
 }
 
 // Generar al cargar
