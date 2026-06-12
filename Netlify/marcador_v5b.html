@@ -67,7 +67,7 @@ a.info-fase{cursor:pointer;}
 
 /* ── PANEL BLANCO ── */
 .panel{
-  flex:1;background:#fff;margin:12px 10px;border-radius:7px;
+  flex:1;background:#fff;margin:7px 10px;border-radius:7px;
   display:flex;align-items:center;padding:12px 12px;gap:12px;
   position:relative;overflow:hidden;
 }
@@ -987,8 +987,13 @@ function _overrideFetch() {
       _aplicarDatos(data);
       try { localStorage.setItem(lsKey, JSON.stringify(data)); } catch(e) {}
     } else {
-      // Sin datos en Firebase: borrar caché para no mostrar estado obsoleto
+      // Sin datos en Firebase: borrar caché y resetear DOM al estado programado
       try { localStorage.removeItem(lsKey); } catch(e) {}
+      _apiActualizarDOM('programado', null, null, null, null, '');
+      var elGL = document.getElementById('goles-local');
+      var elGV = document.getElementById('goles-visit');
+      if (elGL) elGL.textContent = '';
+      if (elGV) elGV.textContent = '';
     }
     clearTimeout(_overrideTimer);
     _overrideTimer = setTimeout(_overrideFetch, 10000);
