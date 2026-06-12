@@ -742,7 +742,14 @@ function _apiActualizarDOM(estado, gL, gV, pL, pV, minuto) {
 
   // Marcador
   var sw = document.getElementById('score-wrap');
-  if (!sw || gL == null) return;
+  if (!sw) return;
+  if (gL == null) {
+    if (estado === 'programado') {
+      var hora = sw.getAttribute('data-hora');
+      if (hora) sw.innerHTML = '<div class="hora-grande">' + hora + 'h</div>';
+    }
+    return;
+  }
   var penHTML = '';
   if (pL != null && pV != null) {
     penHTML = '<div class="pen-bloque"><div class="pen-chip">'
@@ -900,6 +907,7 @@ fetch('https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.
 
   /* ── Marcador central (inicial) ── */
   var sw = document.getElementById('score-wrap');
+  sw.setAttribute('data-hora', enc.hora);
   if (esProg) {
     sw.innerHTML = '<div class="hora-grande">' + enc.hora + 'h</div>';
   } else {
