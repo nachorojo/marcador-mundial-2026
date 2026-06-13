@@ -938,18 +938,18 @@ fetch('https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.
     if (infoBar) infoBar.style.borderBottomColor = 'rgba(255,255,255,.1)';
   }
 
-  /* ── Arrancar: override primero, luego API ── */
-  _overrideFetch();
+  /* ── Arrancar: stream Firebase en tiempo real ── */
+  _overrideStream();
 
 })();
 
 /* ══════════════════════════════════════════════════════════════════════════
-   OVERRIDE — Firebase Realtime DB + caché localStorage
-   Al recargar: muestra el último estado conocido al instante,
-   luego confirma/actualiza desde Firebase.
+   OVERRIDE — Firebase Realtime DB · SSE (push instantáneo)
+   Firebase empuja los cambios en tiempo real. Sin polling, sin caché vieja.
 ══════════════════════════════════════════════════════════════════════════ */
-var _FIREBASE = 'https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.app';
-var _overrideTimer = null;
+var _FIREBASE   = 'https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.app';
+var _sseSource  = null;
+var _pollTimer  = null;
 
 function _aplicarDatos(data) {
   if (!data || Object.keys(data).length === 0) return;
@@ -958,58 +958,84 @@ function _aplicarDatos(data) {
   var gV = data.gV != null ? data.gV : null;
   var pL = (data.pL != null && data.pV != null) ? data.pL : null;
   var pV = (data.pL != null && data.pV != null) ? data.pV : null;
-  // Siempre actualizar estado/dot, aunque no haya goles
   _apiActualizarDOM(estado, gL, gV, pL, pV, data.minuto || '');
   var elGL = document.getElementById('goles-local');
   var elGV = document.getElementById('goles-visit');
-  if (elGL && data.golL) elGL.textContent = data.golL;
-  if (elGV && data.golV) elGV.textContent = data.golV;
+  if (elGL) elGL.textContent = data.golL || '';
+  if (elGV) elGV.textContent = data.golV || '';
 }
 
-function _overrideFetch() {
+function _resetearDOM() {
+  _apiActualizarDOM('programado', null, null, null, null, '');
+  var elGL = document.getElementById('goles-local');
+  var elGV = document.getElementById('goles-visit');
+  if (elGL) elGL.textContent = '';
+  if (elGV) elGV.textContent = '';
+}
+
+function _overrideStream() {
   var params = new URLSearchParams(window.location.search);
   var id     = params.get('id');
-  var numero = params.get('numero') || '1';
+  var numero = (params.get('numero') || '1').replace(/[^0-9]/g, '') || '1';
   if (!id) return;
+  if (params.get('gL') !== null && params.get('gV') !== null) return; // override URL manual
 
-  // Solo saltar Firebase si hay goles explícitos en la URL (override manual específico)
-  if (params.get('gL') !== null && params.get('gV') !== null) return;
+  var key = id + '-' + numero;
 
-  // Sanitizar numero (eliminar cualquier carácter no numérico)
-  numero = (numero + '').replace(/[^0-9]/g, '') || '1';
+  // Cerrar stream anterior si existe
+  if (_sseSource) { try { _sseSource.close(); } catch(e) {} _sseSource = null; }
+  clearTimeout(_pollTimer);
 
-  var key      = id + '-' + numero;
-  var lsKey    = 'mw26-' + key;
-
-  // 1. Aplicar caché localStorage inmediatamente (sin parpadeo al recargar)
   try {
-    var cached = localStorage.getItem(lsKey);
-    if (cached) _aplicarDatos(JSON.parse(cached));
-  } catch(e) {}
+    // Firebase SSE: envía el estado actual al conectar y luego los cambios en tiempo real
+    _sseSource = new EventSource(_FIREBASE + '/partidos/' + key + '.json');
 
-  // 2. Consultar Firebase para confirmar/actualizar
-  fetch(_FIREBASE + '/partidos/' + key + '.json')
+    _sseSource.addEventListener('put', function(e) {
+      try {
+        var msg  = JSON.parse(e.data);
+        var data = msg.data;
+        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+          _aplicarDatos(data);
+        } else {
+          _resetearDOM();
+        }
+      } catch(ex) {}
+    });
+
+    _sseSource.addEventListener('patch', function(e) {
+      try {
+        var msg  = JSON.parse(e.data);
+        if (msg.data) _aplicarDatos(msg.data);
+      } catch(ex) {}
+    });
+
+    _sseSource.onerror = function() {
+      // SSE falló: cerrar y caer en polling de respaldo
+      try { _sseSource.close(); } catch(ex) {}
+      _sseSource = null;
+      _overridePoll(id, numero, key);
+    };
+
+  } catch(ex) {
+    // EventSource no disponible (raro): usar polling
+    _overridePoll(id, numero, key);
+  }
+}
+
+function _overridePoll(id, numero, key) {
+  // Respaldo: polling cada 5s si SSE no está disponible
+  fetch(_FIREBASE + '/partidos/' + key + '.json?nc=' + Math.random())
   .then(function(r){ return r.json(); })
   .then(function(data){
     if (data && Object.keys(data).length > 0) {
       _aplicarDatos(data);
-      try { localStorage.setItem(lsKey, JSON.stringify(data)); } catch(e) {}
     } else {
-      // Sin datos en Firebase: borrar caché y resetear DOM al estado programado
-      try { localStorage.removeItem(lsKey); } catch(e) {}
-      _apiActualizarDOM('programado', null, null, null, null, '');
-      var elGL = document.getElementById('goles-local');
-      var elGV = document.getElementById('goles-visit');
-      if (elGL) elGL.textContent = '';
-      if (elGV) elGV.textContent = '';
+      _resetearDOM();
     }
-    clearTimeout(_overrideTimer);
-    _overrideTimer = setTimeout(_overrideFetch, 10000);
+    _pollTimer = setTimeout(function(){ _overridePoll(id, numero, key); }, 5000);
   })
   .catch(function(){
-    // Sin conexión: el localStorage ya mostró el último estado conocido
-    clearTimeout(_overrideTimer);
-    _overrideTimer = setTimeout(_overrideFetch, 60000);
+    _pollTimer = setTimeout(function(){ _overridePoll(id, numero, key); }, 10000);
   });
 }
 </script>
