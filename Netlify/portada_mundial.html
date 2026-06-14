@@ -1,4 +1,4 @@
-		<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -78,24 +78,12 @@ body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sys
 </head>
 <body>
 
-<!-- ✏️ REDACTOR: EDITA SOLO ESTE BLOQUE ═════════════════════════════════
-   HOY: 'auto' detecta la fecha del sistema, o pon 'YYYY-MM-DD' para forzar
-   RESULTADOS: añade una línea por cada partido con resultado o estado distinto
-   El número es el Nº de partido global (campo n en el calendario)
-════════════════════════════════════════════════════════════════════════ -->
+<!-- ✏️ REDACTOR: usa portada_editor.html para actualizar resultados.
+     Solo toca HOY si necesitas forzar una fecha de prueba ('YYYY-MM-DD').
+     Los resultados vienen de Firebase — no hace falta editar este archivo. -->
 <script>
-var HOY = 'auto';
-
-var RESULTADOS = {
-  // Ejemplo de uso:
-   6:  { gL:1, gV:1, estado:'finalizado' },    // BRA 1-1 MAR
-   7:  { gL:0, gV:1, estado:'finalizado' },    // HAI 0-1 SCO
-   8:  { gL:2, gV:0, estado:'finalizado' },    // AUS 2-0 TUR
-   9:  { estado:'próximo' },              // GER-CUR (en juego)
-   10: { gL:1, gV:0, estado:'segunda-parte' }, // NED-JPN con marcador
-};
+var HOY = 'auto'; // 'auto' = fecha del sistema | 'YYYY-MM-DD' para forzar
 </script>
-<!-- ════════════════════════════════════════════════════════════════════ -->
 
 <div class="pw-wrap" id="pw-wrap">
   <div class="pw-logo">
@@ -106,7 +94,9 @@ var RESULTADOS = {
 </div>
 
 <script>
-var CDN = 'https://www.ondacero.es/newa3flash/onda_cero/mundialcatar/cuadro/flags/4x3/';
+var _FB  = 'https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.app';
+var _pag = 0;
+var CDN  = 'https://www.ondacero.es/newa3flash/onda_cero/mundialcatar/cuadro/flags/4x3/';
 
 var PAISES = {
   "MEX":{flag:"mx"},"RSA":{flag:"za"},"KOR":{flag:"kr"},"CZE":{flag:"cz"},
@@ -144,28 +134,34 @@ var CALENDARIO = [
   {id:"2026-06-28",fecha:"28 jun",encuentros:[{local:"COL",visitante:"POR",hora:"01:30",n:69},{local:"COD",visitante:"UZB",hora:"01:30",n:70},{local:"DZA",visitante:"AUT",hora:"04:00",n:71},{local:"JOR",visitante:"ARG",hora:"04:00",n:72}]},
 ];
 
-var _pag = 0;
+var ESTADOS = {
+  'programado':       {txt:'PRÓXIMO',    cls:'prox'},
+  'primera-parte':    {txt:'EN JUEGO',   cls:'live'},
+  'descanso':         {txt:'DESCANSO',   cls:'prox'},
+  'segunda-parte':    {txt:'EN JUEGO',   cls:'live'},
+  'prorroga-primera': {txt:'PRÓRROGA',   cls:'live'},
+  'prorroga-segunda': {txt:'PRÓRROGA',   cls:'live'},
+  'penaltis':         {txt:'PENALTIS',   cls:'live'},
+  'finalizado':       {txt:'FINALIZADO', cls:'fin'},
+};
 
-(function(){
-  // Detectar hoy
-  var hoy;
-  if (HOY === 'auto') {
-    var d = new Date();
-    hoy = d.getFullYear() + '-'
-      + ('0'+(d.getMonth()+1)).slice(-2) + '-'
-      + ('0'+d.getDate()).slice(-2);
-  } else {
-    hoy = HOY;
-  }
+function pwGetHoy() {
+  if (HOY !== 'auto') return HOY;
+  var d = new Date();
+  return d.getFullYear() + '-'
+    + ('0'+(d.getMonth()+1)).slice(-2) + '-'
+    + ('0'+d.getDate()).slice(-2);
+}
 
-  // Recoger hasta 8 partidos desde hoy en adelante
+function pwRender(resultados) {
+  var hoy = pwGetHoy();
   var lista = [];
   for (var i = 0; i < CALENDARIO.length && lista.length < 8; i++) {
     var dia = CALENDARIO[i];
     if (dia.id.substring(0,10) < hoy) continue;
     for (var j = 0; j < dia.encuentros.length && lista.length < 8; j++) {
       var enc = dia.encuentros[j];
-      var res = RESULTADOS[enc.n] || {};
+      var res = (resultados && resultados[enc.n]) || {};
       lista.push({
         fecha:  dia.fecha,
         hora:   enc.hora,
@@ -179,69 +175,62 @@ var _pag = 0;
     }
   }
 
-  var ESTADOS = {
-    'programado':       {txt:'PRÓXIMO',    cls:'prox'},
-    'primera-parte':    {txt:'EN JUEGO',   cls:'live'},
-    'descanso':         {txt:'DESCANSO',   cls:'prox'},
-    'segunda-parte':    {txt:'EN JUEGO',   cls:'live'},
-    'prorroga-primera': {txt:'PRÓRROGA',   cls:'live'},
-    'prorroga-segunda': {txt:'PRÓRROGA',   cls:'live'},
-    'penaltis':         {txt:'PENALTIS',   cls:'live'},
-    'finalizado':       {txt:'FINALIZADO', cls:'fin'},
-  };
-
-  function makeCard(p) {
-    var lf = (PAISES[p.local]  || {flag:'xx'}).flag;
-    var vf = (PAISES[p.vis]    || {flag:'xx'}).flag;
-    var es = ESTADOS[p.estado] || ESTADOS['programado'];
-    var esProg = p.estado === 'programado' || p.estado === 'descanso';
-    var esLive = es.cls === 'live';
-
-    var estHTML = esLive
-      ? '<span class="pw-estado live"><span class="pw-dot"></span>' + es.txt + '</span>'
-      : '<span class="pw-estado ' + es.cls + '">' + es.txt + '</span>';
-
-    var scoreHTML = (p.gL !== null && p.gV !== null && !esProg)
-      ? '<span class="pw-score">' + p.gL + ' - ' + p.gV + '</span>'
-      : '<span class="pw-score prox">–</span>';
-
-    var c = document.createElement('div');
-    c.className = 'pw-card';
-    c.innerHTML =
-      '<div class="pw-head">'
-        + '<span class="pw-fecha">' + p.fecha + ' ' + p.hora + '</span>'
-        + '<span class="pw-sep">||</span>'
-        + estHTML
-      + '</div>'
-      + '<div class="pw-body">'
-        + '<span class="pw-team">'
-          + '<img class="pw-flag" src="' + CDN + lf + '.svg" alt="">'
-          + '<span class="pw-cod">' + p.local + '</span>'
-        + '</span>'
-        + scoreHTML
-        + '<span class="pw-team vis">'
-          + '<img class="pw-flag" src="' + CDN + vf + '.svg" alt="">'
-          + '<span class="pw-cod">' + p.vis + '</span>'
-        + '</span>'
-      + '</div>';
-    return c;
-  }
-
-  // Crear grupos de 4
   var contenedor = document.getElementById('pw-cards');
-  var grupos = Math.ceil(lista.length / 4);
+  contenedor.innerHTML = '';
+  _pag = 0;
+
+  var grupos = Math.ceil(lista.length / 4) || 1;
   for (var g = 0; g < grupos; g++) {
     var div = document.createElement('div');
     div.className = 'pw-group' + (g === 0 ? ' active' : '');
     div.id = 'pw-g-' + g;
     for (var k = g*4; k < Math.min(g*4+4, lista.length); k++) {
-      div.appendChild(makeCard(lista[k]));
+      div.appendChild(pwMakeCard(lista[k]));
     }
     contenedor.appendChild(div);
   }
 
-  if (grupos > 1) document.getElementById('pw-arrow').classList.add('visible');
-})();
+  var btn = document.getElementById('pw-arrow');
+  btn.textContent = '▶';
+  grupos > 1 ? btn.classList.add('visible') : btn.classList.remove('visible');
+}
+
+function pwMakeCard(p) {
+  var lf = (PAISES[p.local] || {flag:'xx'}).flag;
+  var vf = (PAISES[p.vis]   || {flag:'xx'}).flag;
+  var es = ESTADOS[p.estado] || ESTADOS['programado'];
+  var esProg = p.estado === 'programado' || p.estado === 'descanso';
+  var esLive = es.cls === 'live';
+
+  var estHTML = esLive
+    ? '<span class="pw-estado live"><span class="pw-dot"></span>' + es.txt + '</span>'
+    : '<span class="pw-estado ' + es.cls + '">' + es.txt + '</span>';
+
+  var scoreHTML = (p.gL !== null && p.gV !== null && !esProg)
+    ? '<span class="pw-score">' + p.gL + ' - ' + p.gV + '</span>'
+    : '<span class="pw-score prox">–</span>';
+
+  var c = document.createElement('div');
+  c.className = 'pw-card';
+  c.innerHTML =
+    '<div class="pw-head">'
+      + '<span class="pw-fecha">' + p.fecha + ' ' + p.hora + '</span>'
+      + '<span class="pw-sep">||</span>'
+      + estHTML
+    + '</div>'
+    + '<div class="pw-body">'
+      + '<span class="pw-team">'
+        + '<img class="pw-flag" src="' + CDN + lf + '.svg" alt="">'
+        + '<span class="pw-cod">' + p.local + '</span>'
+      + '</span>'
+      + scoreHTML
+      + '<span class="pw-team vis">'
+        + '<img class="pw-flag" src="' + CDN + vf + '.svg" alt="">'
+        + '<span class="pw-cod">' + p.vis + '</span>'
+      + '</span>'
+    + '</div>';
+  return c;
+}
 
 function pwToggle() {
   var grupos = document.querySelectorAll('.pw-group');
@@ -252,6 +241,12 @@ function pwToggle() {
   document.getElementById('pw-g-' + _pag).classList.add('active');
   document.getElementById('pw-arrow').textContent = _pag === 0 ? '▶' : '◀';
 }
+
+// Cargar resultados desde Firebase y renderizar
+fetch(_FB + '/portada/resultados.json?nc=' + Math.random())
+  .then(function(r) { return r.json(); })
+  .then(function(data) { pwRender(data || {}); })
+  .catch(function()   { pwRender({}); });
 </script>
 </body>
 </html>

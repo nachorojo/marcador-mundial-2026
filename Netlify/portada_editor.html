@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor Portada · Mundial 2026</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#f3f4f6;color:#111;padding:20px;}
+
+h1{font-size:18px;font-weight:800;margin-bottom:4px;}
+.subtitulo{font-size:13px;color:#6b7280;margin-bottom:20px;}
+
+/* ── Controles de fecha ── */
+.fecha-ctrl{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.fecha-ctrl label{font-size:13px;font-weight:600;}
+.fecha-ctrl input[type=date]{border:1px solid #d1d5db;border-radius:6px;padding:5px 8px;font-size:13px;}
+.fecha-ctrl button{background:#374151;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:13px;cursor:pointer;}
+.fecha-ctrl button:hover{background:#111;}
+
+/* ── Tabla de partidos ── */
+.tabla{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:20px;}
+.tabla th{background:#111;color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;padding:8px 10px;text-align:left;}
+.tabla td{padding:8px 10px;border-bottom:1px solid #f0f0f0;font-size:13px;vertical-align:middle;}
+.tabla tr:last-child td{border-bottom:none;}
+.tabla tr:hover td{background:#fafafa;}
+
+.partido-teams{font-weight:700;white-space:nowrap;}
+.partido-hora{color:#6b7280;font-size:12px;}
+.partido-n{color:#9ca3af;font-size:11px;}
+
+select.sel-estado{border:1px solid #d1d5db;border-radius:5px;padding:4px 6px;font-size:12px;font-weight:600;width:130px;}
+select.sel-estado.fin {border-color:#fca5a5;background:#fef2f2;color:#dc2626;}
+select.sel-estado.live{border-color:#86efac;background:#f0fdf4;color:#16a34a;}
+select.sel-estado.prox{border-color:#d1d5db;background:#fff;color:#6b7280;}
+
+.goles-wrap{display:flex;align-items:center;gap:6px;}
+input.inp-gol{width:44px;border:1px solid #d1d5db;border-radius:5px;padding:4px 6px;font-size:14px;font-weight:700;text-align:center;}
+input.inp-gol:disabled{background:#f3f4f6;color:#9ca3af;}
+.goles-sep{font-size:16px;font-weight:900;color:#9ca3af;}
+
+/* ── Botones principales ── */
+.acciones{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.btn{border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.btn:hover{opacity:.85;}
+.btn-guardar{background:#16a34a;color:#fff;}
+.btn-limpiar{background:#dc2626;color:#fff;}
+.btn-consultar{background:#374151;color:#fff;}
+
+/* ── Mensaje de estado ── */
+.msg{font-size:13px;padding:8px 12px;border-radius:6px;display:none;}
+.msg.ok  {background:#dcfce7;color:#166534;display:block;}
+.msg.err {background:#fee2e2;color:#991b1b;display:block;}
+.msg.info{background:#dbeafe;color:#1e40af;display:block;}
+
+/* ── Estado Firebase ── */
+.fb-estado{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:14px;font-size:12px;}
+.fb-estado h2{font-size:13px;font-weight:700;margin-bottom:8px;color:#374151;}
+.fb-estado pre{font-size:11px;color:#4b5563;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;}
+</style>
+</head>
+<body>
+
+<h1>⚽ Editor Portada · Mundial 2026</h1>
+<p class="subtitulo">Los cambios se publican inmediatamente en portada_mundial.html vía Firebase. No hace falta subir nada a GitHub.</p>
+
+<div class="fecha-ctrl">
+  <label>Fecha:</label>
+  <input type="date" id="inp-fecha">
+  <button onclick="cambiarFecha()">Mostrar partidos de ese día</button>
+</div>
+
+<table class="tabla" id="tabla-partidos">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Partido</th>
+      <th>Hora</th>
+      <th>Estado</th>
+      <th>Marcador</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<div class="acciones">
+  <button class="btn btn-guardar" onclick="guardar()">💾 Guardar en portada</button>
+  <button class="btn btn-limpiar" onclick="limpiar()">🗑 Limpiar portada (todo a Próximo)</button>
+  <button class="btn btn-consultar" onclick="consultarFB()">🔍 Ver estado actual en Firebase</button>
+</div>
+
+<div class="msg" id="msg"></div>
+
+<div class="fb-estado" id="fb-bloque" style="display:none">
+  <h2>Estado actual en Firebase · /portada/resultados</h2>
+  <pre id="fb-pre"></pre>
+</div>
+
+<script>
+var _FB = 'https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.app';
+
+var PAISES = {
+  "MEX":"México","RSA":"Sudáfrica","KOR":"Corea del Sur","CZE":"Chequia",
+  "CAN":"Canadá","BIH":"Bosnia","QAT":"Catar","SUI":"Suiza",
+  "BRA":"Brasil","MAR":"Marruecos","HAI":"Haití","SCO":"Escocia",
+  "USA":"EE.UU.","PAR":"Paraguay","AUS":"Australia","TUR":"Turquía",
+  "GER":"Alemania","CUR":"Curazao","CIV":"Costa Marfil","ECU":"Ecuador",
+  "NED":"Países Bajos","JPN":"Japón","SWE":"Suecia","TUN":"Túnez",
+  "BEL":"Bélgica","EGY":"Egipto","IRN":"Irán","NZL":"Nueva Zelanda",
+  "ESP":"España","CPV":"Cabo Verde","KSA":"Arabia Saudí","URU":"Uruguay",
+  "FRA":"Francia","SEN":"Senegal","IRQ":"Irak","NOR":"Noruega",
+  "ARG":"Argentina","DZA":"Argelia","AUT":"Austria","JOR":"Jordania",
+  "POR":"Portugal","COD":"RD Congo","UZB":"Uzbekistán","COL":"Colombia",
+  "ENG":"Inglaterra","CRO":"Croacia","GHA":"Ghana","PAN":"Panamá",
+};
+
+var CALENDARIO = [
+  {id:"2026-06-11",fecha:"11 jun",encuentros:[{local:"MEX",visitante:"RSA",hora:"21:00",n:1}]},
+  {id:"2026-06-12",fecha:"12 jun",encuentros:[{local:"KOR",visitante:"CZE",hora:"04:00",n:2},{local:"CAN",visitante:"BIH",hora:"21:00",n:3}]},
+  {id:"2026-06-13",fecha:"13 jun",encuentros:[{local:"USA",visitante:"PAR",hora:"03:00",n:4},{local:"QAT",visitante:"SUI",hora:"21:00",n:5}]},
+  {id:"2026-06-14",fecha:"14 jun",encuentros:[{local:"BRA",visitante:"MAR",hora:"00:00",n:6},{local:"HAI",visitante:"SCO",hora:"03:00",n:7},{local:"AUS",visitante:"TUR",hora:"06:00",n:8},{local:"GER",visitante:"CUR",hora:"19:00",n:9},{local:"NED",visitante:"JPN",hora:"22:00",n:10}]},
+  {id:"2026-06-15",fecha:"15 jun",encuentros:[{local:"CIV",visitante:"ECU",hora:"01:00",n:11},{local:"SWE",visitante:"TUN",hora:"04:00",n:12},{local:"ESP",visitante:"CPV",hora:"18:00",n:13},{local:"BEL",visitante:"EGY",hora:"21:00",n:14}]},
+  {id:"2026-06-16",fecha:"16 jun",encuentros:[{local:"KSA",visitante:"URU",hora:"00:00",n:15},{local:"IRN",visitante:"NZL",hora:"03:00",n:16},{local:"FRA",visitante:"SEN",hora:"21:00",n:17}]},
+  {id:"2026-06-17",fecha:"17 jun",encuentros:[{local:"IRQ",visitante:"NOR",hora:"00:00",n:18},{local:"ARG",visitante:"DZA",hora:"03:00",n:19},{local:"AUT",visitante:"JOR",hora:"06:00",n:20},{local:"POR",visitante:"COD",hora:"19:00",n:21},{local:"ENG",visitante:"CRO",hora:"22:00",n:22}]},
+  {id:"2026-06-18",fecha:"18 jun",encuentros:[{local:"GHA",visitante:"PAN",hora:"01:00",n:23},{local:"UZB",visitante:"COL",hora:"04:00",n:24},{local:"CZE",visitante:"RSA",hora:"18:00",n:25},{local:"SUI",visitante:"BIH",hora:"21:00",n:26}]},
+  {id:"2026-06-19",fecha:"19 jun",encuentros:[{local:"CAN",visitante:"QAT",hora:"00:00",n:27},{local:"MEX",visitante:"KOR",hora:"03:00",n:28},{local:"USA",visitante:"AUS",hora:"21:00",n:29}]},
+  {id:"2026-06-20",fecha:"20 jun",encuentros:[{local:"SCO",visitante:"MAR",hora:"00:00",n:30},{local:"BRA",visitante:"HAI",hora:"02:30",n:31},{local:"TUR",visitante:"PAR",hora:"05:00",n:32},{local:"NED",visitante:"SWE",hora:"19:00",n:33},{local:"GER",visitante:"CIV",hora:"22:00",n:34}]},
+  {id:"2026-06-21",fecha:"21 jun",encuentros:[{local:"ECU",visitante:"CUR",hora:"02:00",n:35},{local:"TUN",visitante:"JPN",hora:"06:00",n:36},{local:"ESP",visitante:"KSA",hora:"18:00",n:37},{local:"BEL",visitante:"IRN",hora:"21:00",n:38}]},
+  {id:"2026-06-22",fecha:"22 jun",encuentros:[{local:"URU",visitante:"CPV",hora:"00:00",n:39},{local:"NZL",visitante:"EGY",hora:"03:00",n:40},{local:"ARG",visitante:"AUT",hora:"19:00",n:41},{local:"FRA",visitante:"IRQ",hora:"23:00",n:42}]},
+  {id:"2026-06-23",fecha:"23 jun",encuentros:[{local:"NOR",visitante:"SEN",hora:"02:00",n:43},{local:"JOR",visitante:"DZA",hora:"05:00",n:44},{local:"POR",visitante:"UZB",hora:"19:00",n:45},{local:"ENG",visitante:"GHA",hora:"22:00",n:46}]},
+  {id:"2026-06-24",fecha:"24 jun",encuentros:[{local:"PAN",visitante:"CRO",hora:"01:00",n:47},{local:"COL",visitante:"COD",hora:"04:00",n:48},{local:"SUI",visitante:"CAN",hora:"21:00",n:49},{local:"BIH",visitante:"QAT",hora:"21:00",n:50}]},
+  {id:"2026-06-25",fecha:"25 jun",encuentros:[{local:"SCO",visitante:"BRA",hora:"00:00",n:51},{local:"MAR",visitante:"HAI",hora:"00:00",n:52},{local:"CZE",visitante:"MEX",hora:"03:00",n:53},{local:"RSA",visitante:"KOR",hora:"03:00",n:54},{local:"CUR",visitante:"CIV",hora:"22:00",n:55},{local:"ECU",visitante:"GER",hora:"22:00",n:56}]},
+  {id:"2026-06-26",fecha:"26 jun",encuentros:[{local:"JPN",visitante:"SWE",hora:"01:00",n:57},{local:"TUN",visitante:"NED",hora:"01:00",n:58},{local:"TUR",visitante:"USA",hora:"04:00",n:59},{local:"PAR",visitante:"AUS",hora:"04:00",n:60},{local:"NOR",visitante:"FRA",hora:"21:00",n:61},{local:"SEN",visitante:"IRQ",hora:"21:00",n:62}]},
+  {id:"2026-06-27",fecha:"27 jun",encuentros:[{local:"CPV",visitante:"KSA",hora:"02:00",n:63},{local:"URU",visitante:"ESP",hora:"02:00",n:64},{local:"EGY",visitante:"IRN",hora:"05:00",n:65},{local:"NZL",visitante:"BEL",hora:"05:00",n:66},{local:"PAN",visitante:"ENG",hora:"23:00",n:67},{local:"CRO",visitante:"GHA",hora:"23:00",n:68}]},
+  {id:"2026-06-28",fecha:"28 jun",encuentros:[{local:"COL",visitante:"POR",hora:"01:30",n:69},{local:"COD",visitante:"UZB",hora:"01:30",n:70},{local:"DZA",visitante:"AUT",hora:"04:00",n:71},{local:"JOR",visitante:"ARG",hora:"04:00",n:72}]},
+];
+
+var ESTADOS_OPTS = [
+  {val:'programado',       txt:'Próximo'},
+  {val:'primera-parte',   txt:'1ª Parte'},
+  {val:'descanso',        txt:'Descanso'},
+  {val:'segunda-parte',   txt:'2ª Parte'},
+  {val:'prorroga-primera',txt:'Prórroga 1ª'},
+  {val:'prorroga-segunda',txt:'Prórroga 2ª'},
+  {val:'penaltis',        txt:'Penaltis'},
+  {val:'finalizado',      txt:'Finalizado'},
+];
+
+var _hoy = '';
+var _fbActual = {};
+
+// ── Init ──────────────────────────────────────────────────
+(function(){
+  var d = new Date();
+  _hoy = d.getFullYear() + '-'
+       + ('0'+(d.getMonth()+1)).slice(-2) + '-'
+       + ('0'+d.getDate()).slice(-2);
+  document.getElementById('inp-fecha').value = _hoy;
+
+  // Cargar datos de Firebase y luego renderizar tabla
+  fetch(_FB + '/portada/resultados.json?nc=' + Math.random())
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      _fbActual = data && typeof data === 'object' ? data : {};
+      renderTabla(_hoy, _fbActual);
+    })
+    .catch(function(){
+      _fbActual = {};
+      renderTabla(_hoy, {});
+    });
+})();
+
+// ── Renderizar tabla ──────────────────────────────────────
+function renderTabla(fecha, fbData) {
+  var tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+
+  var enc = [];
+  // Recoger partidos de la fecha seleccionada + siguiente hasta 8
+  for (var i = 0; i < CALENDARIO.length && enc.length < 8; i++) {
+    var dia = CALENDARIO[i];
+    if (dia.id.substring(0,10) < fecha) continue;
+    for (var j = 0; j < dia.encuentros.length && enc.length < 8; j++) {
+      enc.push({dia: dia, e: dia.encuentros[j]});
+    }
+  }
+
+  if (enc.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:#9ca3af;padding:20px;text-align:center">No hay partidos desde esa fecha en el calendario</td></tr>';
+    return;
+  }
+
+  enc.forEach(function(item){
+    var e = item.e;
+    var fb = (fbData && fbData[e.n]) ? fbData[e.n] : {};
+    var estado = fb.estado || 'programado';
+    var gL = fb.gL != null ? fb.gL : '';
+    var gV = fb.gV != null ? fb.gV : '';
+
+    var estadoCls = estado === 'finalizado' ? 'fin'
+                  : (estado !== 'programado' && estado !== 'descanso') ? 'live'
+                  : 'prox';
+
+    var optsHTML = ESTADOS_OPTS.map(function(o){
+      return '<option value="' + o.val + '"' + (o.val === estado ? ' selected' : '') + '>' + o.txt + '</option>';
+    }).join('');
+
+    var disabled = (estado === 'programado') ? ' disabled' : '';
+
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="partido-n">P' + e.n + '</td>'
+      + '<td class="partido-teams">'
+          + (PAISES[e.local]||e.local) + ' – ' + (PAISES[e.visitante]||e.visitante)
+        + '<br><span class="partido-hora">' + item.dia.fecha + ' ' + e.hora + '</span>'
+      + '</td>'
+      + '<td>' + e.hora + '</td>'
+      + '<td>'
+          + '<select class="sel-estado ' + estadoCls + '" id="estado-' + e.n + '" onchange="onEstadoCambio(' + e.n + ')">'
+          + optsHTML
+          + '</select>'
+        + '</td>'
+      + '<td>'
+          + '<div class="goles-wrap">'
+            + '<input class="inp-gol" type="number" id="gL-' + e.n + '" min="0" max="99" value="' + gL + '" placeholder="–"' + disabled + '>'
+            + '<span class="goles-sep">-</span>'
+            + '<input class="inp-gol" type="number" id="gV-' + e.n + '" min="0" max="99" value="' + gV + '" placeholder="–"' + disabled + '>'
+          + '</div>'
+        + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Al cambiar el estado de un partido ───────────────────
+function onEstadoCambio(n) {
+  var sel = document.getElementById('estado-' + n);
+  var estado = sel.value;
+  var inpL = document.getElementById('gL-' + n);
+  var inpV = document.getElementById('gV-' + n);
+  var esProg = estado === 'programado';
+
+  inpL.disabled = esProg;
+  inpV.disabled = esProg;
+  if (esProg) { inpL.value = ''; inpV.value = ''; }
+
+  var cls = estado === 'finalizado' ? 'fin'
+          : (estado !== 'programado' && estado !== 'descanso') ? 'live'
+          : 'prox';
+  sel.className = 'sel-estado ' + cls;
+}
+
+// ── Cambiar fecha ─────────────────────────────────────────
+function cambiarFecha() {
+  var f = document.getElementById('inp-fecha').value;
+  if (!f) return;
+  renderTabla(f, _fbActual);
+}
+
+// ── Guardar en Firebase ───────────────────────────────────
+function guardar() {
+  var rows = document.querySelectorAll('#tbody tr');
+  var payload = {};
+
+  rows.forEach(function(tr){
+    var selEl = tr.querySelector('select[id^="estado-"]');
+    if (!selEl) return;
+    var n = parseInt(selEl.id.replace('estado-',''));
+    var estado = selEl.value;
+    if (estado === 'programado') return; // programado = no guardar nada
+
+    var entry = { estado: estado };
+    var gL = document.getElementById('gL-' + n).value;
+    var gV = document.getElementById('gV-' + n).value;
+    if (gL !== '') entry.gL = parseInt(gL);
+    if (gV !== '') entry.gV = parseInt(gV);
+    payload[n] = entry;
+  });
+
+  mostrarMsg('Guardando…', 'info');
+  fetch(_FB + '/portada/resultados.json', {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(){
+    _fbActual = payload;
+    mostrarMsg('✅ Guardado. La portada se actualiza en la próxima carga de página.', 'ok');
+  })
+  .catch(function(e){
+    mostrarMsg('❌ Error al guardar: ' + e.message, 'err');
+  });
+}
+
+// ── Limpiar Firebase ──────────────────────────────────────
+function limpiar() {
+  if (!confirm('¿Seguro? Esto pone todos los partidos como PRÓXIMO en la portada.')) return;
+  mostrarMsg('Limpiando…', 'info');
+  fetch(_FB + '/portada/resultados.json', {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: 'null'
+  })
+  .then(function(){
+    _fbActual = {};
+    var fecha = document.getElementById('inp-fecha').value || _hoy;
+    renderTabla(fecha, {});
+    mostrarMsg('✅ Portada limpiada. Todos los partidos aparecen como PRÓXIMO.', 'ok');
+  })
+  .catch(function(e){
+    mostrarMsg('❌ Error al limpiar: ' + e.message, 'err');
+  });
+}
+
+// ── Consultar Firebase ────────────────────────────────────
+function consultarFB() {
+  mostrarMsg('Consultando Firebase…', 'info');
+  fetch(_FB + '/portada/resultados.json?nc=' + Math.random())
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      _fbActual = data || {};
+      document.getElementById('fb-bloque').style.display = 'block';
+      document.getElementById('fb-pre').textContent =
+        data ? JSON.stringify(data, null, 2) : '(vacío — todos los partidos aparecen como PRÓXIMO)';
+      mostrarMsg('', '');
+    })
+    .catch(function(e){
+      mostrarMsg('❌ Error al consultar Firebase: ' + e.message, 'err');
+    });
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function mostrarMsg(txt, tipo) {
+  var el = document.getElementById('msg');
+  el.className = 'msg ' + tipo;
+  el.textContent = txt;
+  el.style.display = txt ? 'block' : 'none';
+}
+</script>
+</body>
+</html>
