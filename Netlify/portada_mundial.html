@@ -25,8 +25,8 @@ body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sys
 /* ── Cards ── */
 .pw-cards{flex:1;overflow:hidden;position:relative;}
 
-.pw-group{display:none;width:100%;height:100%;}
-.pw-group.active{display:flex;}
+.pw-track{display:flex;transition:transform .35s cubic-bezier(.4,0,.2,1);will-change:transform;}
+.pw-group{flex:none;display:flex;}
 
 .pw-card{
   flex:1;border-right:4px double #ccc;padding:6px 10px;
@@ -47,7 +47,7 @@ body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sys
 
 /* ── Cuerpo: equipos + marcador ── */
 .pw-body{display:flex;align-items:center;gap:4px;}
-.pw-team{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:800;color:#111;min-width:0;}
+.pw-team{display:flex;align-items:center;gap:3px;font-size:17px;font-weight:800;color:#111;min-width:0;}
 .pw-team.vis{flex-direction:row-reverse;}
 .pw-flag{width:18px;height:13px;object-fit:cover;border:1px solid #e5e7eb;flex-shrink:0;display:block;}
 .pw-cod{white-space:nowrap;}
@@ -70,7 +70,7 @@ body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sys
 @media(max-width:600px){
   .pw-card{padding:5px 6px;gap:3px;}
   .pw-score{font-size:14px;padding:0 4px;}
-  .pw-team{font-size:11px;}
+  .pw-team{font-size:14px;}
   .pw-flag{width:15px;height:11px;}
   .pw-head{font-size:9.5px;}
 }
@@ -135,14 +135,14 @@ var CALENDARIO = [
 ];
 
 var ESTADOS = {
-  'programado':       {txt:'PRÓXIMO',    cls:'prox'},
-  'primera-parte':    {txt:'EN JUEGO',   cls:'live'},
-  'descanso':         {txt:'DESCANSO',   cls:'prox'},
-  'segunda-parte':    {txt:'EN JUEGO',   cls:'live'},
-  'prorroga-primera': {txt:'PRÓRROGA',   cls:'live'},
-  'prorroga-segunda': {txt:'PRÓRROGA',   cls:'live'},
-  'penaltis':         {txt:'PENALTIS',   cls:'live'},
-  'finalizado':       {txt:'FINALIZADO', cls:'fin'},
+  'programado':       {txt:'PRÓXIMO',    txtM:'PRÓX',  cls:'prox'},
+  'primera-parte':    {txt:'EN JUEGO',   txtM:'VIVO',  cls:'live'},
+  'descanso':         {txt:'DESCANSO',   txtM:'DESC',  cls:'prox'},
+  'segunda-parte':    {txt:'EN JUEGO',   txtM:'VIVO',  cls:'live'},
+  'prorroga-primera': {txt:'PRÓRROGA',   txtM:'PRORR', cls:'live'},
+  'prorroga-segunda': {txt:'PRÓRROGA',   txtM:'PRORR', cls:'live'},
+  'penaltis':         {txt:'PENALTIS',   txtM:'PEN',   cls:'live'},
+  'finalizado':       {txt:'FINALIZADO', txtM:'FIN',   cls:'fin'},
 };
 
 function pwGetHoy() {
@@ -179,17 +179,45 @@ function pwRender(resultados) {
   contenedor.innerHTML = '';
   _pag = 0;
 
+  var track = document.createElement('div');
+  track.id = 'pw-track';
+  track.className = 'pw-track';
+  contenedor.appendChild(track);
+
   var gs = window.innerWidth <= 640 ? 2 : 4;
   var grupos = Math.ceil(lista.length / gs) || 1;
   for (var g = 0; g < grupos; g++) {
     var div = document.createElement('div');
-    div.className = 'pw-group' + (g === 0 ? ' active' : '');
+    div.className = 'pw-group';
     div.id = 'pw-g-' + g;
     for (var k = g*gs; k < Math.min(g*gs+gs, lista.length); k++) {
       div.appendChild(pwMakeCard(lista[k]));
     }
-    contenedor.appendChild(div);
+    track.appendChild(div);
   }
+
+  // Fijar ancho de cada grupo al ancho visible del contenedor
+  var cw = contenedor.offsetWidth;
+  track.querySelectorAll('.pw-group').forEach(function(el){ el.style.width = cw + 'px'; });
+
+  // Swipe táctil
+  var _tx = 0;
+  contenedor.addEventListener('touchstart', function(e){
+    _tx = e.touches[0].clientX;
+    track.style.transition = 'none';
+  }, {passive:true});
+  contenedor.addEventListener('touchmove', function(e){
+    var dx = e.touches[0].clientX - _tx;
+    track.style.transform = 'translateX(' + (-_pag * cw + dx) + 'px)';
+  }, {passive:true});
+  contenedor.addEventListener('touchend', function(e){
+    var dx = e.changedTouches[0].clientX - _tx;
+    track.style.transition = 'transform .35s cubic-bezier(.4,0,.2,1)';
+    if (dx < -40 && _pag < grupos - 1) _pag++;
+    else if (dx > 40 && _pag > 0) _pag--;
+    track.style.transform = 'translateX(' + (-_pag * cw) + 'px)';
+    pwUpdateArrow();
+  }, {passive:true});
 
   var btn = document.getElementById('pw-arrow');
   btn.textContent = '▶';
@@ -197,15 +225,20 @@ function pwRender(resultados) {
 }
 
 function pwMakeCard(p) {
-  var lf = (PAISES[p.local] || {flag:'xx'}).flag;
-  var vf = (PAISES[p.vis]   || {flag:'xx'}).flag;
-  var es = ESTADOS[p.estado] || ESTADOS['programado'];
+  var lf    = (PAISES[p.local] || {flag:'xx'}).flag;
+  var vf    = (PAISES[p.vis]   || {flag:'xx'}).flag;
+  var es    = ESTADOS[p.estado] || ESTADOS['programado'];
   var esProg = p.estado === 'programado' || p.estado === 'descanso';
   var esLive = es.cls === 'live';
+  var isMob  = window.innerWidth <= 640;
+  var etxt   = isMob ? (es.txtM || es.txt) : es.txt;
+  var fecha  = isMob
+    ? p.fecha.split(' ')[0] + p.fecha.split(' ')[1][0]
+    : p.fecha;
 
   var estHTML = esLive
-    ? '<span class="pw-estado live"><span class="pw-dot"></span>' + es.txt + '</span>'
-    : '<span class="pw-estado ' + es.cls + '">' + es.txt + '</span>';
+    ? '<span class="pw-estado live"><span class="pw-dot"></span>' + etxt + '</span>'
+    : '<span class="pw-estado ' + es.cls + '">' + etxt + '</span>';
 
   var scoreHTML = (p.gL !== null && p.gV !== null && !esProg)
     ? '<span class="pw-score">' + p.gL + ' - ' + p.gV + '</span>'
@@ -215,7 +248,7 @@ function pwMakeCard(p) {
   c.className = 'pw-card';
   c.innerHTML =
     '<div class="pw-head">'
-      + '<span class="pw-fecha">' + p.fecha + ' ' + p.hora + '</span>'
+      + '<span class="pw-fecha">' + fecha + ' ' + p.hora + '</span>'
       + '<span class="pw-sep">||</span>'
       + estHTML
     + '</div>'
@@ -233,14 +266,19 @@ function pwMakeCard(p) {
   return c;
 }
 
+function pwUpdateArrow() {
+  var n = document.querySelectorAll('.pw-group').length;
+  document.getElementById('pw-arrow').textContent = (_pag >= n - 1) ? '◀' : '▶';
+}
 function pwToggle() {
-  var grupos = document.querySelectorAll('.pw-group');
-  var n = grupos.length;
+  var n = document.querySelectorAll('.pw-group').length;
   if (n < 2) return;
-  document.getElementById('pw-g-' + _pag).classList.remove('active');
+  var track = document.getElementById('pw-track');
+  var cw    = document.getElementById('pw-cards').offsetWidth;
   _pag = (_pag + 1) % n;
-  document.getElementById('pw-g-' + _pag).classList.add('active');
-  document.getElementById('pw-arrow').textContent = _pag === 0 ? '▶' : '◀';
+  track.style.transition = 'transform .35s cubic-bezier(.4,0,.2,1)';
+  track.style.transform  = 'translateX(' + (-_pag * cw) + 'px)';
+  pwUpdateArrow();
 }
 
 // Cargar resultados desde Firebase y renderizar
