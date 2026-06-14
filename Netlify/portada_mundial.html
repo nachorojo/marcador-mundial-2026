@@ -1,0 +1,257 @@
+		<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portada · Mundial 2026</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;}
+
+.pw-wrap{
+  width:100%;border-top:3px solid #111;border-bottom:3px solid #111;
+  display:flex;align-items:stretch;background:#fff;overflow:hidden;
+  min-height:72px;
+}
+
+/* ── Logo ── */
+.pw-logo{
+  width:60px;flex-shrink:0;background:#111;
+  display:flex;align-items:center;justify-content:center;padding:8px;
+  border-right:3px solid #111;
+}
+.pw-logo img{width:38px;height:38px;object-fit:contain;display:block;}
+
+/* ── Cards ── */
+.pw-cards{flex:1;overflow:hidden;position:relative;}
+
+.pw-group{display:none;width:100%;height:100%;}
+.pw-group.active{display:flex;}
+
+.pw-card{
+  flex:1;border-right:4px double #ccc;padding:6px 10px;
+  display:flex;flex-direction:column;justify-content:center;gap:5px;
+}
+.pw-card:last-child{border-right:none;}
+
+/* ── Cabecera: fecha + estado ── */
+.pw-head{display:flex;align-items:center;gap:5px;font-size:10.5px;color:#666;flex-wrap:nowrap;}
+.pw-fecha{font-weight:600;white-space:nowrap;}
+.pw-sep{color:#bbb;font-size:10px;}
+.pw-estado{font-weight:800;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;}
+.pw-estado.fin {color:#dc2626;}
+.pw-estado.live{color:#16a34a;display:flex;align-items:center;gap:3px;}
+.pw-estado.prox{color:#9ca3af;}
+.pw-dot{width:6px;height:6px;background:#16a34a;border-radius:50%;animation:pw-blink 1s ease-in-out infinite;flex-shrink:0;}
+@keyframes pw-blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* ── Cuerpo: equipos + marcador ── */
+.pw-body{display:flex;align-items:center;gap:4px;}
+.pw-team{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:800;color:#111;min-width:0;}
+.pw-team.vis{flex-direction:row-reverse;}
+.pw-flag{width:18px;height:13px;object-fit:cover;border:1px solid #e5e7eb;flex-shrink:0;display:block;}
+.pw-cod{white-space:nowrap;}
+.pw-score{
+  font-size:17px;font-weight:900;color:#111;letter-spacing:-1px;
+  padding:0 6px;white-space:nowrap;flex-shrink:0;
+}
+.pw-score.prox{font-size:14px;font-weight:600;color:#d1d5db;}
+
+/* ── Flecha ── */
+.pw-arrow{
+  width:34px;flex-shrink:0;background:#111;border:none;
+  color:#fff;font-size:16px;cursor:pointer;display:none;
+  align-items:center;justify-content:center;
+  transition:background .15s;
+}
+.pw-arrow:hover{background:#333;}
+.pw-arrow.visible{display:flex;}
+
+@media(max-width:600px){
+  .pw-card{padding:5px 6px;gap:3px;}
+  .pw-score{font-size:14px;padding:0 4px;}
+  .pw-team{font-size:11px;}
+  .pw-flag{width:15px;height:11px;}
+  .pw-head{font-size:9.5px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ✏️ REDACTOR: EDITA SOLO ESTE BLOQUE ═════════════════════════════════
+   HOY: 'auto' detecta la fecha del sistema, o pon 'YYYY-MM-DD' para forzar
+   RESULTADOS: añade una línea por cada partido con resultado o estado distinto
+   El número es el Nº de partido global (campo n en el calendario)
+════════════════════════════════════════════════════════════════════════ -->
+<script>
+var HOY = 'auto';
+
+var RESULTADOS = {
+  // Ejemplo de uso:
+   6:  { gL:1, gV:1, estado:'finalizado' },    // BRA 1-1 MAR
+   7:  { gL:0, gV:1, estado:'finalizado' },    // HAI 0-1 SCO
+   8:  { gL:2, gV:0, estado:'finalizado' },    // AUS 2-0 TUR
+   9:  { estado:'próximo' },              // GER-CUR (en juego)
+   10: { gL:1, gV:0, estado:'segunda-parte' }, // NED-JPN con marcador
+};
+</script>
+<!-- ════════════════════════════════════════════════════════════════════ -->
+
+<div class="pw-wrap" id="pw-wrap">
+  <div class="pw-logo">
+    <img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026--white.10e0b37b.png" alt="FIFA 2026">
+  </div>
+  <div class="pw-cards" id="pw-cards"></div>
+  <button class="pw-arrow" id="pw-arrow" onclick="pwToggle()">▶</button>
+</div>
+
+<script>
+var CDN = 'https://www.ondacero.es/newa3flash/onda_cero/mundialcatar/cuadro/flags/4x3/';
+
+var PAISES = {
+  "MEX":{flag:"mx"},"RSA":{flag:"za"},"KOR":{flag:"kr"},"CZE":{flag:"cz"},
+  "CAN":{flag:"ca"},"BIH":{flag:"ba"},"QAT":{flag:"qa"},"SUI":{flag:"ch"},
+  "BRA":{flag:"br"},"MAR":{flag:"ma"},"HAI":{flag:"ht"},"SCO":{flag:"gb-sct"},
+  "USA":{flag:"us"},"PAR":{flag:"py"},"AUS":{flag:"au"},"TUR":{flag:"tr"},
+  "GER":{flag:"de"},"CUR":{flag:"cw"},"CIV":{flag:"ci"},"ECU":{flag:"ec"},
+  "NED":{flag:"nl"},"JPN":{flag:"jp"},"SWE":{flag:"se"},"TUN":{flag:"tn"},
+  "BEL":{flag:"be"},"EGY":{flag:"eg"},"IRN":{flag:"ir"},"NZL":{flag:"nz"},
+  "ESP":{flag:"es"},"CPV":{flag:"cv"},"KSA":{flag:"sa"},"URU":{flag:"uy"},
+  "FRA":{flag:"fr"},"SEN":{flag:"sn"},"IRQ":{flag:"iq"},"NOR":{flag:"no"},
+  "ARG":{flag:"ar"},"DZA":{flag:"dz"},"AUT":{flag:"at"},"JOR":{flag:"jo"},
+  "POR":{flag:"pt"},"COD":{flag:"cd"},"UZB":{flag:"uz"},"COL":{flag:"co"},
+  "ENG":{flag:"gb-eng"},"CRO":{flag:"hr"},"GHA":{flag:"gh"},"PAN":{flag:"pa"},
+};
+
+var CALENDARIO = [
+  {id:"2026-06-11",fecha:"11 jun",encuentros:[{local:"MEX",visitante:"RSA",hora:"21:00",n:1}]},
+  {id:"2026-06-12",fecha:"12 jun",encuentros:[{local:"KOR",visitante:"CZE",hora:"04:00",n:2},{local:"CAN",visitante:"BIH",hora:"21:00",n:3}]},
+  {id:"2026-06-13",fecha:"13 jun",encuentros:[{local:"USA",visitante:"PAR",hora:"03:00",n:4},{local:"QAT",visitante:"SUI",hora:"21:00",n:5}]},
+  {id:"2026-06-14",fecha:"14 jun",encuentros:[{local:"BRA",visitante:"MAR",hora:"00:00",n:6},{local:"HAI",visitante:"SCO",hora:"03:00",n:7},{local:"AUS",visitante:"TUR",hora:"06:00",n:8},{local:"GER",visitante:"CUR",hora:"19:00",n:9},{local:"NED",visitante:"JPN",hora:"22:00",n:10}]},
+  {id:"2026-06-15",fecha:"15 jun",encuentros:[{local:"CIV",visitante:"ECU",hora:"01:00",n:11},{local:"SWE",visitante:"TUN",hora:"04:00",n:12},{local:"ESP",visitante:"CPV",hora:"18:00",n:13},{local:"BEL",visitante:"EGY",hora:"21:00",n:14}]},
+  {id:"2026-06-16",fecha:"16 jun",encuentros:[{local:"KSA",visitante:"URU",hora:"00:00",n:15},{local:"IRN",visitante:"NZL",hora:"03:00",n:16},{local:"FRA",visitante:"SEN",hora:"21:00",n:17}]},
+  {id:"2026-06-17",fecha:"17 jun",encuentros:[{local:"IRQ",visitante:"NOR",hora:"00:00",n:18},{local:"ARG",visitante:"DZA",hora:"03:00",n:19},{local:"AUT",visitante:"JOR",hora:"06:00",n:20},{local:"POR",visitante:"COD",hora:"19:00",n:21},{local:"ENG",visitante:"CRO",hora:"22:00",n:22}]},
+  {id:"2026-06-18",fecha:"18 jun",encuentros:[{local:"GHA",visitante:"PAN",hora:"01:00",n:23},{local:"UZB",visitante:"COL",hora:"04:00",n:24},{local:"CZE",visitante:"RSA",hora:"18:00",n:25},{local:"SUI",visitante:"BIH",hora:"21:00",n:26}]},
+  {id:"2026-06-19",fecha:"19 jun",encuentros:[{local:"CAN",visitante:"QAT",hora:"00:00",n:27},{local:"MEX",visitante:"KOR",hora:"03:00",n:28},{local:"USA",visitante:"AUS",hora:"21:00",n:29}]},
+  {id:"2026-06-20",fecha:"20 jun",encuentros:[{local:"SCO",visitante:"MAR",hora:"00:00",n:30},{local:"BRA",visitante:"HAI",hora:"02:30",n:31},{local:"TUR",visitante:"PAR",hora:"05:00",n:32},{local:"NED",visitante:"SWE",hora:"19:00",n:33},{local:"GER",visitante:"CIV",hora:"22:00",n:34}]},
+  {id:"2026-06-21",fecha:"21 jun",encuentros:[{local:"ECU",visitante:"CUR",hora:"02:00",n:35},{local:"TUN",visitante:"JPN",hora:"06:00",n:36},{local:"ESP",visitante:"KSA",hora:"18:00",n:37},{local:"BEL",visitante:"IRN",hora:"21:00",n:38}]},
+  {id:"2026-06-22",fecha:"22 jun",encuentros:[{local:"URU",visitante:"CPV",hora:"00:00",n:39},{local:"NZL",visitante:"EGY",hora:"03:00",n:40},{local:"ARG",visitante:"AUT",hora:"19:00",n:41},{local:"FRA",visitante:"IRQ",hora:"23:00",n:42}]},
+  {id:"2026-06-23",fecha:"23 jun",encuentros:[{local:"NOR",visitante:"SEN",hora:"02:00",n:43},{local:"JOR",visitante:"DZA",hora:"05:00",n:44},{local:"POR",visitante:"UZB",hora:"19:00",n:45},{local:"ENG",visitante:"GHA",hora:"22:00",n:46}]},
+  {id:"2026-06-24",fecha:"24 jun",encuentros:[{local:"PAN",visitante:"CRO",hora:"01:00",n:47},{local:"COL",visitante:"COD",hora:"04:00",n:48},{local:"SUI",visitante:"CAN",hora:"21:00",n:49},{local:"BIH",visitante:"QAT",hora:"21:00",n:50}]},
+  {id:"2026-06-25",fecha:"25 jun",encuentros:[{local:"SCO",visitante:"BRA",hora:"00:00",n:51},{local:"MAR",visitante:"HAI",hora:"00:00",n:52},{local:"CZE",visitante:"MEX",hora:"03:00",n:53},{local:"RSA",visitante:"KOR",hora:"03:00",n:54},{local:"CUR",visitante:"CIV",hora:"22:00",n:55},{local:"ECU",visitante:"GER",hora:"22:00",n:56}]},
+  {id:"2026-06-26",fecha:"26 jun",encuentros:[{local:"JPN",visitante:"SWE",hora:"01:00",n:57},{local:"TUN",visitante:"NED",hora:"01:00",n:58},{local:"TUR",visitante:"USA",hora:"04:00",n:59},{local:"PAR",visitante:"AUS",hora:"04:00",n:60},{local:"NOR",visitante:"FRA",hora:"21:00",n:61},{local:"SEN",visitante:"IRQ",hora:"21:00",n:62}]},
+  {id:"2026-06-27",fecha:"27 jun",encuentros:[{local:"CPV",visitante:"KSA",hora:"02:00",n:63},{local:"URU",visitante:"ESP",hora:"02:00",n:64},{local:"EGY",visitante:"IRN",hora:"05:00",n:65},{local:"NZL",visitante:"BEL",hora:"05:00",n:66},{local:"PAN",visitante:"ENG",hora:"23:00",n:67},{local:"CRO",visitante:"GHA",hora:"23:00",n:68}]},
+  {id:"2026-06-28",fecha:"28 jun",encuentros:[{local:"COL",visitante:"POR",hora:"01:30",n:69},{local:"COD",visitante:"UZB",hora:"01:30",n:70},{local:"DZA",visitante:"AUT",hora:"04:00",n:71},{local:"JOR",visitante:"ARG",hora:"04:00",n:72}]},
+];
+
+var _pag = 0;
+
+(function(){
+  // Detectar hoy
+  var hoy;
+  if (HOY === 'auto') {
+    var d = new Date();
+    hoy = d.getFullYear() + '-'
+      + ('0'+(d.getMonth()+1)).slice(-2) + '-'
+      + ('0'+d.getDate()).slice(-2);
+  } else {
+    hoy = HOY;
+  }
+
+  // Recoger hasta 8 partidos desde hoy en adelante
+  var lista = [];
+  for (var i = 0; i < CALENDARIO.length && lista.length < 8; i++) {
+    var dia = CALENDARIO[i];
+    if (dia.id.substring(0,10) < hoy) continue;
+    for (var j = 0; j < dia.encuentros.length && lista.length < 8; j++) {
+      var enc = dia.encuentros[j];
+      var res = RESULTADOS[enc.n] || {};
+      lista.push({
+        fecha:  dia.fecha,
+        hora:   enc.hora,
+        local:  enc.local,
+        vis:    enc.visitante,
+        n:      enc.n,
+        estado: res.estado || 'programado',
+        gL:     res.gL != null ? res.gL : null,
+        gV:     res.gV != null ? res.gV : null,
+      });
+    }
+  }
+
+  var ESTADOS = {
+    'programado':       {txt:'PRÓXIMO',    cls:'prox'},
+    'primera-parte':    {txt:'EN JUEGO',   cls:'live'},
+    'descanso':         {txt:'DESCANSO',   cls:'prox'},
+    'segunda-parte':    {txt:'EN JUEGO',   cls:'live'},
+    'prorroga-primera': {txt:'PRÓRROGA',   cls:'live'},
+    'prorroga-segunda': {txt:'PRÓRROGA',   cls:'live'},
+    'penaltis':         {txt:'PENALTIS',   cls:'live'},
+    'finalizado':       {txt:'FINALIZADO', cls:'fin'},
+  };
+
+  function makeCard(p) {
+    var lf = (PAISES[p.local]  || {flag:'xx'}).flag;
+    var vf = (PAISES[p.vis]    || {flag:'xx'}).flag;
+    var es = ESTADOS[p.estado] || ESTADOS['programado'];
+    var esProg = p.estado === 'programado' || p.estado === 'descanso';
+    var esLive = es.cls === 'live';
+
+    var estHTML = esLive
+      ? '<span class="pw-estado live"><span class="pw-dot"></span>' + es.txt + '</span>'
+      : '<span class="pw-estado ' + es.cls + '">' + es.txt + '</span>';
+
+    var scoreHTML = (p.gL !== null && p.gV !== null && !esProg)
+      ? '<span class="pw-score">' + p.gL + ' - ' + p.gV + '</span>'
+      : '<span class="pw-score prox">–</span>';
+
+    var c = document.createElement('div');
+    c.className = 'pw-card';
+    c.innerHTML =
+      '<div class="pw-head">'
+        + '<span class="pw-fecha">' + p.fecha + ' ' + p.hora + '</span>'
+        + '<span class="pw-sep">||</span>'
+        + estHTML
+      + '</div>'
+      + '<div class="pw-body">'
+        + '<span class="pw-team">'
+          + '<img class="pw-flag" src="' + CDN + lf + '.svg" alt="">'
+          + '<span class="pw-cod">' + p.local + '</span>'
+        + '</span>'
+        + scoreHTML
+        + '<span class="pw-team vis">'
+          + '<img class="pw-flag" src="' + CDN + vf + '.svg" alt="">'
+          + '<span class="pw-cod">' + p.vis + '</span>'
+        + '</span>'
+      + '</div>';
+    return c;
+  }
+
+  // Crear grupos de 4
+  var contenedor = document.getElementById('pw-cards');
+  var grupos = Math.ceil(lista.length / 4);
+  for (var g = 0; g < grupos; g++) {
+    var div = document.createElement('div');
+    div.className = 'pw-group' + (g === 0 ? ' active' : '');
+    div.id = 'pw-g-' + g;
+    for (var k = g*4; k < Math.min(g*4+4, lista.length); k++) {
+      div.appendChild(makeCard(lista[k]));
+    }
+    contenedor.appendChild(div);
+  }
+
+  if (grupos > 1) document.getElementById('pw-arrow').classList.add('visible');
+})();
+
+function pwToggle() {
+  var grupos = document.querySelectorAll('.pw-group');
+  var n = grupos.length;
+  if (n < 2) return;
+  document.getElementById('pw-g-' + _pag).classList.remove('active');
+  _pag = (_pag + 1) % n;
+  document.getElementById('pw-g-' + _pag).classList.add('active');
+  document.getElementById('pw-arrow').textContent = _pag === 0 ? '▶' : '◀';
+}
+</script>
+</body>
+</html>
