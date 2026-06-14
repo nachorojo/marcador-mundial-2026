@@ -30,7 +30,7 @@ body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sys
 
 .pw-card{
   flex:1;border-right:4px double #ccc;padding:6px 10px;
-  display:flex;flex-direction:column;justify-content:center;gap:5px;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;
 }
 .pw-card:last-child{border-right:none;}
 
@@ -179,12 +179,13 @@ function pwRender(resultados) {
   contenedor.innerHTML = '';
   _pag = 0;
 
-  var grupos = Math.ceil(lista.length / 4) || 1;
+  var gs = window.innerWidth <= 640 ? 2 : 4;
+  var grupos = Math.ceil(lista.length / gs) || 1;
   for (var g = 0; g < grupos; g++) {
     var div = document.createElement('div');
     div.className = 'pw-group' + (g === 0 ? ' active' : '');
     div.id = 'pw-g-' + g;
-    for (var k = g*4; k < Math.min(g*4+4, lista.length); k++) {
+    for (var k = g*gs; k < Math.min(g*gs+gs, lista.length); k++) {
       div.appendChild(pwMakeCard(lista[k]));
     }
     contenedor.appendChild(div);
