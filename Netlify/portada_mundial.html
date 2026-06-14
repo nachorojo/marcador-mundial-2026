@@ -282,10 +282,14 @@ function pwToggle() {
 }
 
 // Cargar resultados desde Firebase y renderizar
-fetch(_FB + '/portada/resultados.json?nc=' + Math.random())
-  .then(function(r) { return r.json(); })
-  .then(function(data) { pwRender(data || {}); })
-  .catch(function()   { pwRender({}); });
+function pwFetch() {
+  fetch(_FB + '/portada/resultados.json?nc=' + Math.random())
+    .then(function(r) { return r.json(); })
+    .then(function(data) { pwRender(data || {}); })
+    .catch(function()   {});
+}
+pwFetch();
+setInterval(pwFetch, 60000); // refresco automático cada 60 segundos
 </script>
 </body>
 </html>
