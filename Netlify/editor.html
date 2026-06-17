@@ -292,6 +292,14 @@ var CALENDARIO = [
   {id:"final",fecha:"Dom 19 jul",fase:"Final",encuentros:[{local:"G101",visitante:"G102",hora:"21:00",n:104}]},
 ];
 
+// ── Equipos KO desde Firebase ──
+var _equiposKO = {};
+var _FIREBASE = 'https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.app';
+fetch(_FIREBASE + '/equipos_ko.json')
+  .then(function(r){ return r.json(); })
+  .then(function(d){ if (d) _equiposKO = d; })
+  .catch(function(){});
+
 // ── Init ──
 (function(){
   var sel = document.getElementById('sel-fecha');
@@ -325,8 +333,8 @@ function onNumChange(){
   var ni  = parseInt(document.getElementById('sel-num').value);
   var dia = CALENDARIO[di];
   var enc = dia.encuentros[ni];
-  var locD = PAISES[enc.local]    || {nombre:enc.local,    flag:'xx'};
-  var visD = PAISES[enc.visitante]|| {nombre:enc.visitante,flag:'xx'};
+  var locD = PAISES[enc.local]    || _equiposKO[enc.local]    || {nombre:enc.local,    flag:'xx'};
+  var visD = PAISES[enc.visitante]|| _equiposKO[enc.visitante]|| {nombre:enc.visitante,flag:'xx'};
 
   var info = document.getElementById('partido-info');
   info.innerHTML =
