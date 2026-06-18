@@ -297,18 +297,49 @@ var _equiposKO = {};
 var _FIREBASE = 'https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.app';
 fetch(_FIREBASE + '/equipos_ko.json')
   .then(function(r){ return r.json(); })
-  .then(function(d){ if (d) _equiposKO = d; })
+  .then(function(d){ if (d) { _equiposKO = d; _refreshKONames(); } })
   .catch(function(){});
+
+// Actualiza solo los textos del dropdown y partido-info con los nombres KO — sin tocar el formulario
+function _refreshKONames() {
+  var di  = parseInt(document.getElementById('sel-fecha').value || 0);
+  var dia = CALENDARIO[di];
+  var sel = document.getElementById('sel-num');
+  dia.encuentros.forEach(function(enc, i) {
+    if (!sel.options[i]) return;
+    var locN = (PAISES[enc.local]    || _equiposKO[enc.local]    || {nombre:enc.local}).nombre;
+    var visN = (PAISES[enc.visitante]|| _equiposKO[enc.visitante]|| {nombre:enc.visitante}).nombre;
+    sel.options[i].textContent = (i+1) + '. ' + enc.hora + 'h · ' + locN + ' – ' + visN;
+  });
+  var ni  = parseInt(sel.value || 0);
+  var enc = dia.encuentros[ni];
+  if (!enc) return;
+  var locD = PAISES[enc.local]    || _equiposKO[enc.local]    || {nombre:enc.local,    flag:'xx'};
+  var visD = PAISES[enc.visitante]|| _equiposKO[enc.visitante]|| {nombre:enc.visitante,flag:'xx'};
+  document.getElementById('partido-info').innerHTML =
+    '<img class="flag-mini" src="' + CDN + locD.flag + '.svg" onerror="this.style.display=\'none\'">'
+    + '<strong>' + locD.nombre + '</strong><span class="sep">vs</span><strong>' + visD.nombre + '</strong>'
+    + '<span class="sep">·</span>' + enc.hora + 'h';
+  document.getElementById('lbl-gl').textContent   = 'Goles '      + locD.nombre;
+  document.getElementById('lbl-gv').textContent   = 'Goles '      + visD.nombre;
+  document.getElementById('lbl-goll').textContent = 'Goleadores ' + locD.nombre;
+  document.getElementById('lbl-golv').textContent = 'Goleadores ' + visD.nombre;
+}
 
 // ── Init ──
 (function(){
   var sel = document.getElementById('sel-fecha');
+  var now = new Date();
+  var hoy = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  var selIdx = 0, foundHoy = false;
   CALENDARIO.forEach(function(d, i){
     var opt = document.createElement('option');
     opt.value = i;
     opt.textContent = d.fecha + ' · ' + d.fase;
     sel.appendChild(opt);
+    if (!foundHoy && (d.id === hoy || d.id.startsWith(hoy + '-'))) { selIdx = i; foundHoy = true; }
   });
+  sel.value = selIdx;
   onFechaChange();
 })();
 
@@ -320,8 +351,8 @@ function onFechaChange(){
   dia.encuentros.forEach(function(enc, i){
     var opt = document.createElement('option');
     opt.value = i;
-    var locN = (PAISES[enc.local]   || {nombre:enc.local}).nombre;
-    var visN = (PAISES[enc.visitante]||{nombre:enc.visitante}).nombre;
+    var locN = (PAISES[enc.local]    || _equiposKO[enc.local]    || {nombre:enc.local}).nombre;
+    var visN = (PAISES[enc.visitante]|| _equiposKO[enc.visitante]|| {nombre:enc.visitante}).nombre;
     opt.textContent = (i+1) + '. ' + enc.hora + 'h · ' + locN + ' – ' + visN;
     sel.appendChild(opt);
   });
