@@ -772,7 +772,25 @@ function _apiActualizarDOM(estado, gL, gV, pL, pV, minuto) {
 window._equiposKO = {};
 fetch('https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.app/equipos_ko.json')
 .then(function(r){ return r.json(); })
-.then(function(d){ if (d) window._equiposKO = d; })
+.then(function(d){
+  if (!d) return;
+  window._equiposKO = d;
+  /* Actualizar nombres/banderas si el render usó el código bruto (PAISES no lo conocía) */
+  if (!_encRef) return;
+  var cdn = 'https://www.ondacero.es/newa3flash/onda_cero/mundialcatar/cuadro/flags/4x3/';
+  var nlEl = document.getElementById('nombre-local');
+  var nvEl = document.getElementById('nombre-visit');
+  var flEl = document.getElementById('flag-local');
+  var fvEl = document.getElementById('flag-visit');
+  if (nlEl && nlEl.textContent === _encRef.local     && d[_encRef.local]) {
+    nlEl.textContent = d[_encRef.local].nombre;
+    if (flEl) flEl.src = cdn + d[_encRef.local].flag + '.svg';
+  }
+  if (nvEl && nvEl.textContent === _encRef.visitante && d[_encRef.visitante]) {
+    nvEl.textContent = d[_encRef.visitante].nombre;
+    if (fvEl) fvEl.src = cdn + d[_encRef.visitante].flag + '.svg';
+  }
+})
 .catch(function(){});
 
 /* ══════════════════════════════════════════════════════════════════════════
