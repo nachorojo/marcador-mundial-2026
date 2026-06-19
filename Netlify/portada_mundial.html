@@ -51,6 +51,8 @@ body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sys
 .pw-team.vis{flex-direction:row-reverse;}
 .pw-flag{width:18px;height:13px;object-fit:cover;border:1px solid #e5e7eb;flex-shrink:0;display:block;}
 .pw-cod{white-space:nowrap;}
+a.pw-cod{color:inherit;text-decoration:none;}
+a.pw-cod:hover{text-decoration:underline;}
 .pw-score{
   font-size:17px;font-weight:900;color:#111;letter-spacing:-1px;
   padding:0 6px;white-space:nowrap;flex-shrink:0;
@@ -97,20 +99,58 @@ var HOY = 'auto'; // 'auto' = fecha del sistema | 'YYYY-MM-DD' para forzar
 var _FB  = 'https://marcador-mundial-2026-default-rtdb.europe-west1.firebasedatabase.app';
 var _pag = 0;
 var CDN  = 'https://www.ondacero.es/newa3flash/onda_cero/mundialcatar/cuadro/flags/4x3/';
+var _equiposKO = {};
+var _lastResultados = {};
 
 var PAISES = {
-  "MEX":{flag:"mx"},"RSA":{flag:"za"},"KOR":{flag:"kr"},"CZE":{flag:"cz"},
-  "CAN":{flag:"ca"},"BIH":{flag:"ba"},"QAT":{flag:"qa"},"SUI":{flag:"ch"},
-  "BRA":{flag:"br"},"MAR":{flag:"ma"},"HAI":{flag:"ht"},"SCO":{flag:"gb-sct"},
-  "USA":{flag:"us"},"PAR":{flag:"py"},"AUS":{flag:"au"},"TUR":{flag:"tr"},
-  "GER":{flag:"de"},"CUR":{flag:"cw"},"CIV":{flag:"ci"},"ECU":{flag:"ec"},
-  "NED":{flag:"nl"},"JPN":{flag:"jp"},"SWE":{flag:"se"},"TUN":{flag:"tn"},
-  "BEL":{flag:"be"},"EGY":{flag:"eg"},"IRN":{flag:"ir"},"NZL":{flag:"nz"},
-  "ESP":{flag:"es"},"CPV":{flag:"cv"},"KSA":{flag:"sa"},"URU":{flag:"uy"},
-  "FRA":{flag:"fr"},"SEN":{flag:"sn"},"IRQ":{flag:"iq"},"NOR":{flag:"no"},
-  "ARG":{flag:"ar"},"DZA":{flag:"dz"},"AUT":{flag:"at"},"JOR":{flag:"jo"},
-  "POR":{flag:"pt"},"COD":{flag:"cd"},"UZB":{flag:"uz"},"COL":{flag:"co"},
-  "ENG":{flag:"gb-eng"},"CRO":{flag:"hr"},"GHA":{flag:"gh"},"PAN":{flag:"pa"},
+  "MEX":{flag:"mx",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/mexico-suena-casa-romper-techo-historico-mundiales_202605216a0f1bb87e0b4632078f5fa2.html"},
+  "RSA":{flag:"za",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/sudafrica-vuelve-mundial-ambicion-pasar-primera-vez-fase-grupos_202605216a0f47ad7e0b4632078fae29.html"},
+  "KOR":{flag:"kr",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/corea-sur-aferra-liderazgo-son-volver-competir-grandes_202605216a0f4700339dd32ea98d4af4.html"},
+  "CZE":{flag:"cz",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/republica-checa-vuelve-mundial-20-anos-despues-penaltis-escandalos_202605216a0f4747339dd32ea98d4b5f.html"},
+  "CAN":{flag:"ca",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/canada-primera-vez-verdad-busca-sus-primeros-puntos-mundialistas_202605216a0f53f0339dd32ea98d6025.html"},
+  "BIH":{flag:"ba",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/bosnia-que-mato-italia-vuelve-doce-anos-despues_202605216a0f54187e0b4632078fc151.html"},
+  "QAT":{flag:"qa",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/qatar-revancha-anfitrion-que-despidio-punto_202605216a0f47f2339dd32ea98d4c84.html"},
+  "SUI":{flag:"ch",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/suiza-equipo-que-ningun-favorito-quiere-cruzarse_202605216a0f484a3ce3f96345cf1127.html"},
+  "BRA":{flag:"br",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/brasil-eterna-espera-hexa-ancelotti-mando_202605216a0f48833ce3f96345cf1198.html"},
+  "MAR":{flag:"ma",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/marruecos-leones-atlas-que-son-sorpresa_202605216a0f49a93ce3f96345cf1324.html"},
+  "HAI":{flag:"ht",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/haiti-clasificacion-imposible-pais-que-juega-estadio_202605216a0f496e339dd32ea98d4ef2.html"},
+  "SCO":{flag:"gb-sct",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/escocia-28-anos-espera-chilena-historia_202605216a0f49427e0b4632078fb08b.html"},
+  "USA":{flag:"us",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/estados-unidos-jugar-casa-pulisic-mando_202605216a0f49f37e0b4632078fb1b3.html"},
+  "PAR":{flag:"py",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/paraguay-16-anos-despues-garra-guarani-intacta_202605216a0f4a1a3ce3f96345cf13d4.html"},
+  "AUS":{flag:"au",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/australia-socceroos-leccion-aprendida-qatar_202605216a0f49cb3ce3f96345cf136f.html"},
+  "TUR":{flag:"tr",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/turquia-24-anos-espera-arda-guler-saciar-hambre_202605216a0f4a557e0b4632078fb20c.html"},
+  "GER":{flag:"de",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/alemania-vuelve-hambre-wirtz-musiala-mandan_202605216a0f4a7b3ce3f96345cf1449.html"},
+  "CUR":{flag:"cw",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/curazao-150000-habitantes-sueno-gigantesco_202605216a0f4adc3ce3f96345cf1555.html"},
+  "CIV":{flag:"ci",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/costa-marfil-elefantes-que-tienen-excusas_202605216a0f4aa97e0b4632078fb28c.html"},
+  "ECU":{flag:"ec",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/ecuador-llega-sus-mejores-cartas-pero-pregunta-siempre_202605216a0f4b70339dd32ea98d527a.html"},
+  "NED":{flag:"nl",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/paises-bajos-obsesion-naranja-titulo-que-siempre-escapa_202605216a0f4bdd7e0b4632078fb4c4.html"},
+  "JPN":{flag:"jp",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/japon-samurais-que-conforman-sobrevivir_202605216a0f4b9e3ce3f96345cf1678.html"},
+  "SWE":{flag:"se",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/suecia-potter-salvo-gyokeres-puede-hacer-resto_202605216a0f4c147e0b4632078fb532.html"},
+  "TUN":{flag:"tn",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/tunez-aguilas-cartago-muro-que-nunca-cae_202605216a0f4c523ce3f96345cf17cb.html"},
+  "BEL":{flag:"be",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/belgica-ultima-llamada-generacion-que-sabe-perder-tiempo_202605216a0f4c7d339dd32ea98d5434.html"},
+  "EGY":{flag:"eg",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/egipto-salah-todo-ultimo-baile-mundialista_202605216a0f4ca37e0b4632078fb602.html"},
+  "IRN":{flag:"ir",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/iran-clasificados-campo-pero-incertidumbre-politica_202605216a0f4e233ce3f96345cf1a5d.html"},
+  "NZL":{flag:"nz",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/nueva-zelanda-all-whites-sombra-rugby_202605216a0f4e61339dd32ea98d5767.html"},
+  "ESP":{flag:"es",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/espana-segundo-mundial_202605216a0f4f0e3ce3f96345cf1bd0.html"},
+  "CPV":{flag:"cv",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/cabo-verde-tiburones-azules-que-llegaron-primera-vez_202605216a0f4ee93ce3f96345cf1b9f.html"},
+  "KSA":{flag:"sa",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/arabia-saudita-millon-dolares-que-vale-ilusion_202605216a0f4eaa339dd32ea98d57fa.html"},
+  "URU":{flag:"uy",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/uruguay-celeste-bielsa-vista-largo-plazo_202605216a0f4f32339dd32ea98d589b.html"},
+  "FRA":{flag:"fr",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/francia-despedida-deschamps-revancha-mbappe_202605216a0f4f5b3ce3f96345cf1c41.html"},
+  "SEN":{flag:"sn",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/senegal-leones-teranga-quieren-replicar-magia-2002_202605216a0f4ff43ce3f96345cf1d47.html"},
+  "IRQ":{flag:"iq",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/irak-40-anos-espera-ultimo-billete-mundial_202605216a0f4fa07e0b4632078fbaad.html"},
+  "NOR":{flag:"no",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/noruega-28-anos-espera-gigante-llamado-haaland_202605216a0f4fcb3ce3f96345cf1d20.html"},
+  "ARG":{flag:"ar",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/argentina-ultimo-baile-messi-defensa-corona_202605216a0f506d7e0b4632078fbbdd.html"},
+  "DZA":{flag:"dz",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/argelia-regreso-mahrez-12-anos-ver-mundial_202605216a0f501d7e0b4632078fbb50.html"},
+  "AUT":{flag:"at",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/austria-vuelta-despues-28-anos-metodo-rangnick_202605216a0f50907e0b4632078fbc25.html"},
+  "JOR":{flag:"jo",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/jordania-nashama-primer-mundial-historia_202605216a0f50c37e0b4632078fbc50.html"},
+  "POR":{flag:"pt",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/portugal-ultima-oportunidad-cristiano-generacion-excusas_202605216a0f511e339dd32ea98d5b9f.html"},
+  "COD":{flag:"cd",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/congo-52-anos-espera-regreso-leopardos_202605216a0f514e339dd32ea98d5c00.html"},
+  "UZB":{flag:"uz",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/uzbekistan-debut-primer-pais-asia-central-mundial_202605216a0f517b7e0b4632078fbd43.html"},
+  "COL":{flag:"co",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/colombia-regreso-tricolor-james-diaz-frente_202605216a0f50f37e0b4632078fbc83.html"},
+  "ENG":{flag:"gb-eng",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/inglaterra-60-anos-esperando-tuchel-volante_202605216a0f51f07e0b4632078fbe31.html"},
+  "CRO":{flag:"hr",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/croacia-ultimo-baile-modri-generacion-historica_202605216a0f51a07e0b4632078fbd68.html"},
+  "GHA":{flag:"gh",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/ghana-estrellas-negras-kudus-frente_202605216a0f51ca3ce3f96345cf1feb.html"},
+  "PAN":{flag:"pa",url:"https://www.ondacero.es/deportes/futbol/mundial-futbol/panama-segundo-mundial-canaleros_202605216a0f46a2339dd32ea98d4a96.html"},
 };
 
 var CALENDARIO = [
@@ -132,6 +172,25 @@ var CALENDARIO = [
   {id:"2026-06-26",fecha:"26 jun",encuentros:[{local:"JPN",visitante:"SWE",hora:"01:00",n:57},{local:"TUN",visitante:"NED",hora:"01:00",n:58},{local:"TUR",visitante:"USA",hora:"04:00",n:59},{local:"PAR",visitante:"AUS",hora:"04:00",n:60},{local:"NOR",visitante:"FRA",hora:"21:00",n:61},{local:"SEN",visitante:"IRQ",hora:"21:00",n:62}]},
   {id:"2026-06-27",fecha:"27 jun",encuentros:[{local:"CPV",visitante:"KSA",hora:"02:00",n:63},{local:"URU",visitante:"ESP",hora:"02:00",n:64},{local:"EGY",visitante:"IRN",hora:"05:00",n:65},{local:"NZL",visitante:"BEL",hora:"05:00",n:66},{local:"PAN",visitante:"ENG",hora:"23:00",n:67},{local:"CRO",visitante:"GHA",hora:"23:00",n:68}]},
   {id:"2026-06-28",fecha:"28 jun",encuentros:[{local:"COL",visitante:"POR",hora:"01:30",n:69},{local:"COD",visitante:"UZB",hora:"01:30",n:70},{local:"DZA",visitante:"AUT",hora:"04:00",n:71},{local:"JOR",visitante:"ARG",hora:"04:00",n:72}]},
+  {id:"2026-06-28-d16",fecha:"28 jun",encuentros:[{local:"2A",visitante:"2B",hora:"21:00",n:73}]},
+  {id:"2026-06-29",fecha:"29 jun",encuentros:[{local:"1C",visitante:"2F",hora:"19:00",n:74},{local:"1E",visitante:"3ABCDF",hora:"22:30",n:75}]},
+  {id:"2026-06-30",fecha:"30 jun",encuentros:[{local:"1F",visitante:"2C",hora:"03:00",n:76},{local:"2E",visitante:"2I",hora:"19:00",n:77},{local:"1I",visitante:"3CDFGH",hora:"23:00",n:78}]},
+  {id:"2026-07-01",fecha:"1 jul",encuentros:[{local:"1A",visitante:"3CEFHI",hora:"03:00",n:79},{local:"1L",visitante:"3EHIJK",hora:"18:00",n:80},{local:"1G",visitante:"3AEHIJ",hora:"22:00",n:81}]},
+  {id:"2026-07-02",fecha:"2 jul",encuentros:[{local:"1D",visitante:"3BEFIJ",hora:"02:00",n:82},{local:"1H",visitante:"2J",hora:"21:00",n:83}]},
+  {id:"2026-07-03",fecha:"3 jul",encuentros:[{local:"2K",visitante:"2L",hora:"01:00",n:84},{local:"1B",visitante:"3EFGIJ",hora:"05:00",n:85},{local:"2D",visitante:"2G",hora:"20:00",n:86}]},
+  {id:"2026-07-04-d16",fecha:"4 jul",encuentros:[{local:"1J",visitante:"2H",hora:"00:00",n:87},{local:"1K",visitante:"3DEIJL",hora:"03:30",n:88}]},
+  {id:"2026-07-04-oct",fecha:"4 jul",encuentros:[{local:"G73",visitante:"G75",hora:"19:00",n:89},{local:"G74",visitante:"G77",hora:"23:00",n:90}]},
+  {id:"2026-07-05",fecha:"5 jul",encuentros:[{local:"G76",visitante:"G78",hora:"22:00",n:91}]},
+  {id:"2026-07-06",fecha:"6 jul",encuentros:[{local:"G79",visitante:"G80",hora:"02:00",n:92},{local:"G83",visitante:"G84",hora:"21:00",n:93}]},
+  {id:"2026-07-07",fecha:"7 jul",encuentros:[{local:"G81",visitante:"G82",hora:"02:00",n:94},{local:"G86",visitante:"G88",hora:"18:00",n:95},{local:"G85",visitante:"G87",hora:"22:00",n:96}]},
+  {id:"2026-07-09",fecha:"9 jul",encuentros:[{local:"G89",visitante:"G90",hora:"22:00",n:97}]},
+  {id:"2026-07-10",fecha:"10 jul",encuentros:[{local:"G93",visitante:"G94",hora:"21:00",n:98}]},
+  {id:"2026-07-11",fecha:"11 jul",encuentros:[{local:"G91",visitante:"G92",hora:"23:00",n:99}]},
+  {id:"2026-07-12",fecha:"12 jul",encuentros:[{local:"G95",visitante:"G96",hora:"03:00",n:100}]},
+  {id:"2026-07-14",fecha:"14 jul",encuentros:[{local:"G97",visitante:"G98",hora:"21:00",n:101}]},
+  {id:"2026-07-15",fecha:"15 jul",encuentros:[{local:"G99",visitante:"G100",hora:"21:00",n:102}]},
+  {id:"2026-07-18",fecha:"18 jul",encuentros:[{local:"P101",visitante:"P102",hora:"23:00",n:103}]},
+  {id:"2026-07-19",fecha:"19 jul",encuentros:[{local:"G101",visitante:"G102",hora:"21:00",n:104}]},
 ];
 
 var ESTADOS = {
@@ -225,8 +284,16 @@ function pwRender(resultados) {
 }
 
 function pwMakeCard(p) {
-  var lf    = (PAISES[p.local] || {flag:'xx'}).flag;
-  var vf    = (PAISES[p.vis]   || {flag:'xx'}).flag;
+  var lf      = (PAISES[p.local] || _equiposKO[p.local] || {flag:'xx'}).flag;
+  var vf      = (PAISES[p.vis]   || _equiposKO[p.vis]   || {flag:'xx'}).flag;
+  var lnombre = _equiposKO[p.local] ? _equiposKO[p.local].nombre : p.local;
+  var vnombre = _equiposKO[p.vis]   ? _equiposKO[p.vis].nombre   : p.vis;
+  var lurl    = (PAISES[p.local] || {}).url || (_equiposKO[p.local] || {}).url || '';
+  var vurl    = (PAISES[p.vis]   || {}).url || (_equiposKO[p.vis]   || {}).url || '';
+  var ltag    = lurl ? 'a class="pw-cod" href="' + lurl + '" target="_blank"' : 'span class="pw-cod"';
+  var vtag    = vurl ? 'a class="pw-cod" href="' + vurl + '" target="_blank"' : 'span class="pw-cod"';
+  var lclose  = lurl ? 'a' : 'span';
+  var vclose  = vurl ? 'a' : 'span';
   var es    = ESTADOS[p.estado] || ESTADOS['programado'];
   var esProg = p.estado === 'programado' || p.estado === 'descanso';
   var esLive = es.cls === 'live';
@@ -255,12 +322,12 @@ function pwMakeCard(p) {
     + '<div class="pw-body">'
       + '<span class="pw-team">'
         + '<img class="pw-flag" src="' + CDN + lf + '.svg" alt="">'
-        + '<span class="pw-cod">' + p.local + '</span>'
+        + '<' + ltag + '>' + lnombre + '</' + lclose + '>'
       + '</span>'
       + scoreHTML
       + '<span class="pw-team vis">'
         + '<img class="pw-flag" src="' + CDN + vf + '.svg" alt="">'
-        + '<span class="pw-cod">' + p.vis + '</span>'
+        + '<' + vtag + '>' + vnombre + '</' + vclose + '>'
       + '</span>'
     + '</div>';
   return c;
@@ -285,11 +352,15 @@ function pwToggle() {
 function pwFetch() {
   fetch(_FB + '/portada/resultados.json?nc=' + Math.random())
     .then(function(r) { return r.json(); })
-    .then(function(data) { pwRender(data || {}); })
+    .then(function(data) { _lastResultados = data || {}; pwRender(_lastResultados); })
     .catch(function()   {});
 }
-pwFetch();
-setInterval(pwFetch, 60000); // refresco automático cada 60 segundos
+requestAnimationFrame(pwFetch);
+setInterval(pwFetch, 60000);
+fetch(_FB + '/equipos_ko.json')
+  .then(function(r){ return r.json(); })
+  .then(function(d){ if (d) { _equiposKO = d; pwRender(_lastResultados); } })
+  .catch(function(){});
 </script>
 </body>
 </html>
