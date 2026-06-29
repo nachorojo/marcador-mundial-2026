@@ -3,69 +3,66 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Equipos KO · Mundial 2026</title>
+<title>Clasificados KO · Mundial 2026</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:#1e293b;font-size:14px;}
 header{background:#0a1628;color:#fff;padding:16px 24px;display:flex;align-items:center;gap:12px;}
 header h1{font-size:16px;font-weight:700;}
 header span{font-size:12px;color:#94a3b8;}
-.container{max-width:900px;margin:0 auto;padding:24px 16px;}
-.intro{background:#fff;border-radius:10px;padding:16px;margin-bottom:20px;border:1.5px solid #e2e8f0;font-size:13px;color:#475569;line-height:1.6;}
+.container{max-width:960px;margin:0 auto;padding:24px 16px;}
+.intro{background:#fff;border-radius:10px;padding:14px 16px;margin-bottom:20px;border:1.5px solid #e2e8f0;font-size:13px;color:#475569;line-height:1.6;}
 .intro strong{color:#0a1628;}
-.fase-titulo{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin:24px 0 10px;}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:4px;}
-.campo{background:#fff;border-radius:8px;padding:10px 12px;border:1.5px solid #e2e8f0;}
-.campo label{display:block;font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:6px;font-family:monospace;}
+.fase-titulo{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin:28px 0 10px;display:flex;align-items:center;gap:8px;}
+.fase-titulo::after{content:'';flex:1;height:1px;background:#e2e8f0;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
+.campo{background:#fff;border-radius:8px;padding:10px 12px;border:1.5px solid #e2e8f0;transition:border-color .15s;}
+.campo.filled{border-color:#86efac;background:#f0fdf4;}
+.campo-code{font-size:10px;font-weight:800;font-family:monospace;color:#94a3b8;margin-bottom:2px;}
+.campo.filled .campo-code{color:#16a34a;}
+.campo-desc{font-size:11px;color:#475569;margin-bottom:7px;line-height:1.3;}
+.campo-desc.pending{color:#94a3b8;font-style:italic;}
 .campo-row{display:flex;gap:6px;align-items:center;}
 .campo input{padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;outline:none;transition:border-color .15s;}
 .campo input:focus{border-color:#1d4ed8;}
 .campo input.inp-nombre{flex:1;min-width:0;}
-.campo input.inp-flag{width:58px;font-family:monospace;font-size:12px;}
+.campo input.inp-flag{width:56px;font-family:monospace;font-size:12px;}
 .flag-preview{width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;background:#e2e8f0;}
 .btn-guardar{
   width:100%;padding:12px;background:#16a34a;color:#fff;border:none;border-radius:8px;
-  font-size:14px;font-weight:700;cursor:pointer;margin-top:20px;transition:background .15s;
+  font-size:14px;font-weight:700;cursor:pointer;margin-top:24px;transition:background .15s;
 }
 .btn-guardar:hover{background:#15803d;}
 .btn-guardar:disabled{background:#94a3b8;cursor:not-allowed;}
 .msg{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;display:none;text-align:center;}
 .msg.ok{background:#dcfce7;color:#15803d;display:block;}
 .msg.err{background:#fee2e2;color:#dc2626;display:block;}
-.btn-cargar{font-size:12px;font-weight:600;color:#1d4ed8;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;}
+.btn-recargar{font-size:12px;font-weight:600;color:#1d4ed8;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Editor Equipos KO · Mundial 2026</h1>
+  <h1>Clasificados Fase KO · Mundial 2026</h1>
   <span>· ondacero.es</span>
 </header>
 
 <div class="container">
 
   <div class="intro">
-    <strong>¿Cómo funciona?</strong> A medida que avanza el Mundial, rellena el nombre del equipo clasificado — la bandera se auto-rellena si el país está en la lista. Pulsa "Guardar todo" y los marcadores del directo lo actualizarán en ~10 segundos.<br><br>
-    Deja vacío si el equipo aún no se conoce. <button class="btn-cargar" onclick="cargarDesdeFB()">↓ Cargar datos guardados</button>
+    <strong>¿Cómo funciona?</strong> Cuando acaba un partido, escribe el nombre del equipo ganador en el campo correspondiente — la bandera se rellena sola. Pulsa "Guardar todo" y los marcadores del directo lo actualizan en ~10 segundos.<br>
+    Deja el campo vacío si el equipo aún no se conoce. <button class="btn-recargar" onclick="cargarDesdeFB()">↓ Recargar datos guardados</button>
   </div>
 
-  <!-- DIECISEISAVOS -->
-  <div class="fase-titulo">Dieciseisavos — Clasificados de grupos</div>
-  <div class="grid" id="grid-d16"></div>
-
-  <!-- GANADORES D16 para Octavos -->
-  <div class="fase-titulo">Octavos — Ganadores de dieciseisavos</div>
+  <div class="fase-titulo">Octavos de final — ¿Quién ganó cada dieciseisavo?</div>
   <div class="grid" id="grid-oct"></div>
 
-  <!-- CUARTOS -->
-  <div class="fase-titulo">Cuartos — Ganadores de octavos</div>
+  <div class="fase-titulo">Cuartos de final — ¿Quién ganó cada octavo?</div>
   <div class="grid" id="grid-cto"></div>
 
-  <!-- SEMIS -->
-  <div class="fase-titulo">Semifinales — Ganadores de cuartos</div>
+  <div class="fase-titulo">Semifinales — ¿Quién ganó cada cuarto?</div>
   <div class="grid" id="grid-sf"></div>
 
-  <!-- FINAL -->
   <div class="fase-titulo">Final y 3er puesto</div>
   <div class="grid" id="grid-final"></div>
 
@@ -74,52 +71,40 @@ header span{font-size:12px;color:#94a3b8;}
 
 </div>
 
-<!-- Datalist para autocompletar nombres de equipo -->
 <datalist id="dl-paises">
   <option value="Albania"><option value="Alemania"><option value="Angola">
   <option value="Arabia Saudí"><option value="Argelia"><option value="Argentina">
   <option value="Australia"><option value="Austria"><option value="Azerbaiyán">
-  <option value="Bélgica"><option value="Bolivia"><option value="Bosnia y Herz.">
+  <option value="Bélgica"><option value="Bolivia">
+  <option value="Bosnia y Herz."><option value="Bosnia Herzegovina">
   <option value="Brasil"><option value="Burkina Faso">
   <option value="Cabo Verde"><option value="Camerún"><option value="Canadá">
   <option value="Catar"><option value="Chile"><option value="China">
   <option value="Chequia"><option value="Colombia"><option value="Corea del Norte">
   <option value="Corea del Sur"><option value="Costa de Marfil"><option value="Costa Rica">
-  <option value="Croacia"><option value="Cuba"><option value="Curazao">
+  <option value="Croacia"><option value="Curazao">
   <option value="Ecuador"><option value="Egipto"><option value="El Salvador">
   <option value="Escocia"><option value="Eslovaquia"><option value="Eslovenia">
-  <option value="España"><option value="EE.UU.">
-  <option value="Etiopía">
-  <option value="Finlandia"><option value="Francia">
+  <option value="España"><option value="Estados Unidos"><option value="EE.UU.">
+  <option value="Etiopía"><option value="Finlandia"><option value="Francia">
   <option value="Gales"><option value="Georgia"><option value="Ghana"><option value="Grecia">
-  <option value="Guatemala">
   <option value="Haití"><option value="Honduras"><option value="Hungría">
   <option value="India"><option value="Indonesia"><option value="Irak">
   <option value="Irán"><option value="Irlanda"><option value="Islandia">
   <option value="Israel"><option value="Italia">
   <option value="Jamaica"><option value="Japón"><option value="Jordania">
   <option value="Kenya"><option value="Kosovo">
-  <option value="Libia">
   <option value="Mali"><option value="Marruecos"><option value="México">
-  <option value="Mozambique">
   <option value="Nicaragua"><option value="Nigeria"><option value="Noruega">
   <option value="Nueva Zelanda">
-  <option value="Omán">
-  <option value="Países Bajos"><option value="Pakistán"><option value="Panamá">
-  <option value="Paraguay"><option value="Perú"><option value="Polonia">
-  <option value="Portugal"><option value="Puerto Rico">
-  <option value="Qatar">
-  <option value="RD Congo"><option value="Rumanía"><option value="Rusia">
-  <option value="Senegal"><option value="Serbia"><option value="Siria">
-  <option value="Somalia"><option value="Sudáfrica"><option value="Sudán">
+  <option value="Países Bajos"><option value="Panamá"><option value="Paraguay">
+  <option value="Perú"><option value="Polonia"><option value="Portugal">
+  <option value="RD Congo"><option value="Rumanía">
+  <option value="Senegal"><option value="Serbia"><option value="Sudáfrica">
   <option value="Suecia"><option value="Suiza">
-  <option value="Tailandia"><option value="Tanzania"><option value="Turquía">
-  <option value="Túnez">
-  <option value="Uganda"><option value="Ucrania"><option value="Uruguay">
-  <option value="Uzbekistán">
+  <option value="Turquía"><option value="Túnez">
+  <option value="Ucrania"><option value="Uruguay"><option value="Uzbekistán">
   <option value="Venezuela">
-  <option value="Yemen">
-  <option value="Zambia"><option value="Zimbabue">
 </datalist>
 
 <script>
@@ -129,61 +114,105 @@ var CDN = 'https://www.ondacero.es/newa3flash/onda_cero/mundialcatar/cuadro/flag
 var NOMBRE_A_FLAG = {
   'Albania':'al','Alemania':'de','Angola':'ao','Arabia Saudí':'sa',
   'Argelia':'dz','Argentina':'ar','Australia':'au','Austria':'at',
-  'Azerbaiyán':'az','Bélgica':'be','Bolivia':'bo','Bosnia y Herz.':'ba',
-  'Brasil':'br','Burkina Faso':'bf','Cabo Verde':'cv','Camerún':'cm',
-  'Canadá':'ca','Catar':'qa','Chile':'cl','China':'cn',
-  'Chequia':'cz','Colombia':'co','Corea del Norte':'kp','Corea del Sur':'kr',
-  'Costa de Marfil':'ci','Costa Rica':'cr','Croacia':'hr','Cuba':'cu',
-  'Curazao':'cw','Ecuador':'ec','Egipto':'eg','El Salvador':'sv',
+  'Bélgica':'be','Bolivia':'bo','Bosnia y Herz.':'ba','Bosnia Herzegovina':'ba',
+  'Brasil':'br','Cabo Verde':'cv','Camerún':'cm','Canadá':'ca',
+  'Catar':'qa','Chile':'cl','China':'cn','Chequia':'cz',
+  'Colombia':'co','Corea del Norte':'kp','Corea del Sur':'kr',
+  'Costa de Marfil':'ci','Costa Rica':'cr','Croacia':'hr','Curazao':'cw',
+  'Ecuador':'ec','Egipto':'eg','El Salvador':'sv',
   'Escocia':'gb-sct','Eslovaquia':'sk','Eslovenia':'si','España':'es',
-  'EE.UU.':'us','Etiopía':'et','Finlandia':'fi','Francia':'fr',
+  'Estados Unidos':'us','EE.UU.':'us',
+  'Etiopía':'et','Finlandia':'fi','Francia':'fr',
   'Gales':'gb-wls','Georgia':'ge','Ghana':'gh','Grecia':'gr',
-  'Guatemala':'gt','Haití':'ht','Honduras':'hn','Hungría':'hu',
+  'Haití':'ht','Honduras':'hn','Hungría':'hu',
   'India':'in','Indonesia':'id','Irak':'iq','Irán':'ir',
   'Irlanda':'ie','Islandia':'is','Israel':'il','Italia':'it',
   'Jamaica':'jm','Japón':'jp','Jordania':'jo','Kenya':'ke',
-  'Kosovo':'xk','Libia':'ly','Mali':'ml','Marruecos':'ma',
-  'México':'mx','Mozambique':'mz','Nicaragua':'ni','Nigeria':'ng',
-  'Noruega':'no','Nueva Zelanda':'nz','Omán':'om','Países Bajos':'nl',
-  'Pakistán':'pk','Panamá':'pa','Paraguay':'py','Perú':'pe',
-  'Polonia':'pl','Portugal':'pt','Puerto Rico':'pr','Qatar':'qa',
-  'RD Congo':'cd','Rumanía':'ro','Rusia':'ru','Senegal':'sn',
-  'Serbia':'rs','Siria':'sy','Somalia':'so','Sudáfrica':'za',
-  'Sudán':'sd','Suecia':'se','Suiza':'ch','Tailandia':'th',
-  'Tanzania':'tz','Turquía':'tr','Túnez':'tn','Uganda':'ug',
-  'Ucrania':'ua','Uruguay':'uy','Uzbekistán':'uz','Venezuela':'ve',
-  'Yemen':'ye','Zambia':'zm','Zimbabue':'zw'
+  'Kosovo':'xk','Mali':'ml','Marruecos':'ma','México':'mx',
+  'Nicaragua':'ni','Nigeria':'ng','Noruega':'no','Nueva Zelanda':'nz',
+  'Países Bajos':'nl','Panamá':'pa','Paraguay':'py','Perú':'pe',
+  'Polonia':'pl','Portugal':'pt',
+  'RD Congo':'cd','Rumanía':'ro','Rusia':'ru',
+  'Senegal':'sn','Serbia':'rs','Sudáfrica':'za',
+  'Suecia':'se','Suiza':'ch',
+  'Turquía':'tr','Túnez':'tn',
+  'Ucrania':'ua','Uruguay':'uy','Uzbekistán':'uz','Venezuela':'ve'
 };
 
-// Códigos por fase
-var GRUPOS_D16 = [
-  '1A','2A','1B','2B','1C','2C','1D','2D',
-  '1E','2E','1F','2F','1G','2G','1H','2H',
-  '1I','2I','1J','2J','1K','2K','1L','2L',
-  '3ABCDF','3BEFIJ','3CDFGH','3CEFHI','3DEIJL','3EFGIJ','3AEHIJ','3EHIJK'
-];
-var CODES_OCT = ['G73','G74','G75','G76','G77','G78','G79','G80','G81','G82','G83','G84','G85','G86','G87','G88'];
-var CODES_CTO = ['G89','G90','G91','G92','G93','G94','G95','G96'];
-var CODES_SF  = ['G97','G98','G99','G100'];
-var CODES_FIN = ['G101','G102','P101','P102'];
+// Descripción fija para los octavos (partido de dieciseisavos conocido)
+var DESC_OCT = {
+  'G73':'Gana: Sudáfrica vs Canadá',
+  'G74':'Gana: Brasil vs Japón',
+  'G75':'Gana: Alemania vs Paraguay',
+  'G76':'Gana: Países Bajos vs Marruecos',
+  'G77':'Gana: Costa de Marfil vs Noruega',
+  'G78':'Gana: Francia vs Suecia',
+  'G79':'Gana: México vs Ecuador',
+  'G80':'Gana: Inglaterra vs RD Congo',
+  'G81':'Gana: Bélgica vs Senegal',
+  'G82':'Gana: Estados Unidos vs Bosnia y Herz.',
+  'G83':'Gana: España vs Austria',
+  'G84':'Gana: Portugal vs Croacia',
+  'G85':'Gana: Suiza vs Argelia',
+  'G86':'Gana: Australia vs Egipto',
+  'G87':'Gana: Argentina vs Cabo Verde',
+  'G88':'Gana: Colombia vs Ghana'
+};
+
+// Dependencias: [partido local, partido visitante]
+var ORIGEN = {
+  'G89':['G73','G75'], 'G90':['G74','G77'],
+  'G91':['G76','G78'], 'G92':['G79','G80'],
+  'G93':['G83','G84'], 'G94':['G81','G82'],
+  'G95':['G86','G88'], 'G96':['G85','G87'],
+  'G97':['G89','G90'], 'G98':['G93','G94'],
+  'G99':['G91','G92'], 'G100':['G95','G96'],
+  'G101':['G97','G98'], 'G102':['G99','G100'],
+  'P101':['G97','G98'], 'P102':['G99','G100']
+};
+
+var CODES_OCT   = ['G73','G74','G75','G76','G77','G78','G79','G80','G81','G82','G83','G84','G85','G86','G87','G88'];
+var CODES_CTO   = ['G89','G90','G91','G92','G93','G94','G95','G96'];
+var CODES_SF    = ['G97','G98','G99','G100'];
+var CODES_FINAL = ['G101','G102','P101','P102'];
+
+var _datos = {};
+
+function nombreDe(code) {
+  return (_datos[code] || {}).nombre || code;
+}
+
+function descParaCodigo(code) {
+  if (DESC_OCT[code]) return DESC_OCT[code];
+  var o = ORIGEN[code];
+  if (!o) return '';
+  var a = nombreDe(o[0]);
+  var b = nombreDe(o[1]);
+  var prefix = code.startsWith('P') ? 'Pierde: ' : 'Gana: ';
+  return prefix + a + ' vs ' + b;
+}
 
 function crearCampos(codes, gridId) {
   var grid = document.getElementById(gridId);
   codes.forEach(function(code) {
     var div = document.createElement('div');
     div.className = 'campo';
+    div.id = 'campo-' + code;
+    var desc = descParaCodigo(code);
+    var isPending = /^G\d+$/.test(code) && !DESC_OCT[code] && !/^[A-Z]/.test(desc.replace(/^(Gana|Pierde): /,''));
     div.innerHTML =
-      '<label>' + code + '</label>'
+      '<div class="campo-code">' + code + '</div>'
+      + '<div class="campo-desc' + (isPending ? ' pending' : '') + '" id="desc-' + code + '">' + desc + '</div>'
       + '<div class="campo-row">'
       + '<img id="img-' + code + '" class="flag-preview" style="display:none" onerror="this.style.display=\'none\'">'
-      + '<input class="inp-nombre" id="n-' + code + '" list="dl-paises" placeholder="ej: Argentina" type="text" oninput="autoFlag(\'' + code + '\')">'
-      + '<input class="inp-flag" id="f-' + code + '" placeholder="es" type="text" maxlength="8" oninput="prevFlag(\'' + code + '\')" title="Código ISO bandera (ej: es, fr, gb-eng)">'
+      + '<input class="inp-nombre" id="n-' + code + '" list="dl-paises" placeholder="Ganador…" type="text" oninput="onNombreInput(\'' + code + '\')">'
+      + '<input class="inp-flag" id="f-' + code + '" placeholder="es" type="text" maxlength="8" oninput="prevFlag(\'' + code + '\')" title="Código bandera (ej: es, fr, gb-eng)">'
       + '</div>';
     grid.appendChild(div);
   });
 }
 
-function autoFlag(code) {
+function onNombreInput(code) {
   var nombre = ((document.getElementById('n-' + code) || {}).value || '').trim();
   var flag = NOMBRE_A_FLAG[nombre];
   if (flag) {
@@ -191,44 +220,73 @@ function autoFlag(code) {
     if (f) f.value = flag;
     prevFlag(code);
   }
+  // Actualizar estado visual del campo
+  var campo = document.getElementById('campo-' + code);
+  if (campo) {
+    if (nombre) campo.classList.add('filled');
+    else campo.classList.remove('filled');
+  }
+  // Actualizar _datos en memoria para refrescar descripciones de fases siguientes
+  if (nombre) {
+    if (!_datos[code]) _datos[code] = {};
+    _datos[code].nombre = nombre;
+  } else {
+    if (_datos[code]) delete _datos[code].nombre;
+  }
+  actualizarDescripciones();
 }
 
 function prevFlag(code) {
   var flag = ((document.getElementById('f-' + code) || {}).value || '').trim();
   var img = document.getElementById('img-' + code);
   if (!img) return;
-  if (flag) {
-    img.src = CDN + flag + '.svg';
-    img.style.display = 'inline-block';
-  } else {
-    img.style.display = 'none';
-  }
+  if (flag) { img.src = CDN + flag + '.svg'; img.style.display = 'inline-block'; }
+  else img.style.display = 'none';
 }
 
-crearCampos(GRUPOS_D16, 'grid-d16');
-crearCampos(CODES_OCT,  'grid-oct');
-crearCampos(CODES_CTO,  'grid-cto');
-crearCampos(CODES_SF,   'grid-sf');
-crearCampos(CODES_FIN,  'grid-final');
+function actualizarDescripciones() {
+  var dinamicos = CODES_CTO.concat(CODES_SF, CODES_FINAL);
+  dinamicos.forEach(function(code) {
+    var el = document.getElementById('desc-' + code);
+    if (!el) return;
+    var desc = descParaCodigo(code);
+    el.textContent = desc;
+    // pending si aún hay códigos sin resolver (G89, G97, etc.)
+    var sinResolver = /\bG\d+\b/.test(desc.replace(/^(Gana|Pierde): /, ''));
+    el.className = 'campo-desc' + (sinResolver ? ' pending' : '');
+  });
+}
+
+crearCampos(CODES_OCT,   'grid-oct');
+crearCampos(CODES_CTO,   'grid-cto');
+crearCampos(CODES_SF,    'grid-sf');
+crearCampos(CODES_FINAL, 'grid-final');
 
 function cargarDesdeFB() {
   fetch(FIREBASE + '/equipos_ko.json')
   .then(function(r){ return r.json(); })
   .then(function(data){
     if (!data) { mostrarMsg(false, 'No hay datos guardados todavía.'); return; }
-    Object.keys(data).forEach(function(code) {
+    _datos = data;
+    var todos = CODES_OCT.concat(CODES_CTO, CODES_SF, CODES_FINAL);
+    todos.forEach(function(code) {
+      var d = data[code];
+      if (!d) return;
       var n = document.getElementById('n-' + code);
       var f = document.getElementById('f-' + code);
-      if (n && data[code].nombre) n.value = data[code].nombre;
-      if (f && data[code].flag)   { f.value = data[code].flag; prevFlag(code); }
+      if (n && d.nombre) { n.value = d.nombre; }
+      if (f && d.flag)   { f.value = d.flag; prevFlag(code); }
+      var campo = document.getElementById('campo-' + code);
+      if (campo && d.nombre) campo.classList.add('filled');
     });
-    mostrarMsg(true, '✅ Datos cargados desde Firebase.');
+    actualizarDescripciones();
+    mostrarMsg(true, '✅ Datos cargados.');
   })
-  .catch(function(){ mostrarMsg(false, '❌ Error al cargar.'); });
+  .catch(function(){ mostrarMsg(false, '❌ Error al cargar. Comprueba la conexión.'); });
 }
 
 function guardarTodo() {
-  var todos = GRUPOS_D16.concat(CODES_OCT, CODES_CTO, CODES_SF, CODES_FIN);
+  var todos = CODES_OCT.concat(CODES_CTO, CODES_SF, CODES_FINAL);
   var payload = {};
   todos.forEach(function(code) {
     var n = (document.getElementById('n-' + code) || {}).value || '';
@@ -240,12 +298,13 @@ function guardarTodo() {
   btn.disabled = true;
   btn.textContent = '⏳ Guardando…';
 
+  // PATCH para no machacar los datos de grupos (1A, 2B, etc.) ya guardados
   fetch(FIREBASE + '/equipos_ko.json', {
-    method: 'PUT',
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   })
-  .then(function(){ mostrarMsg(true, '✅ Guardado. Los marcadores actualizarán en ~10 segundos.'); })
+  .then(function(){ mostrarMsg(true, '✅ Guardado. Los marcadores actualizan en ~10 segundos.'); })
   .catch(function(){ mostrarMsg(false, '❌ Error al guardar.'); })
   .finally(function(){
     btn.disabled = false;
@@ -257,7 +316,7 @@ function mostrarMsg(ok, txt) {
   var el = document.getElementById('msg');
   el.className = 'msg ' + (ok ? 'ok' : 'err');
   el.textContent = txt;
-  setTimeout(function(){ el.className = 'msg'; }, 5000);
+  setTimeout(function(){ el.className = 'msg'; }, 6000);
 }
 
 // Cargar al abrir
